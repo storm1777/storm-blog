@@ -1,4 +1,6 @@
 /resources/public/js/compiled/**
+/resources/public/edn/**
+/resources/public/img/**
 figwheel_server.log
 pom.xml
 *jar
@@ -13,3 +15,4 @@ pom.xml
 .nrepl-port
 .jpg
 .edn
+tmp/logs/figwheel-logfile.log
