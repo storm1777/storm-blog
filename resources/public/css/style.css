@@ -1,0 +1,41 @@
+/* * { box-sizing: border-box; vertical-align: top; text-rendering: optimizelegibility; }
+* { background: transparent; }
+html, input, textarea, button { font: 13px/20px 'Input Sans Narr', sans-serif; }
+body { background: linear-gradient(to bottom, hsl(185, 25%, 83%) 0%,
+       hsl(185, 25%, 88%) 100%); background-attachment: fixed;
+       margin-bottom 120px; }
+header {height: 100px; }
+.blog-article {margin:2px; }
+.blog-title {margin: 100px; height: 100px; width: 100; }
+.blog-banner {height: 500px; background-image: url("../img/banner-background.JPG"); background-size: 100%; border-style: solid; border-width: 1px; }
+.j-and-k     {height: 200px; background-image: url("../img/j-and-k-picture.JPG"); background-size: 100%; }
+.canvas   {width: 1300px; overflow: hidden; margin: 0 auto; background-color: white; border-radius: 9px; border-style: solid; border-width: 1px; }
+.articles, .left-sidebar, .right-sidebar, .blog-article {padding: 5px; border-style: solid; border-width: 1px; }
+.articles, .left-sidebar, .right-sidebar {display: inline-block; vertical-align: top; }
+.left-sidebar, .right-sidebar {width: 20%; }
+.articles      {width: 60%; } */
+
+/*
+.demo-layout-transparent {background: url("../img/banner-background.JPG") center / cover ;}
+.demo-layout-transparent .mdl-layout__header, .demo-layout-transparent .mdl-layout__drawer-button {color: white ;}
+*/
+
+/*
+.demo-card-square.mdl-card {width: 320px; height: 320px; }
+.demo-card-square > .mdl-card__title {color: #fff; background: url('../img/banner-background.JPG') bottom right 15% no-repeat #46B6AC ;
+                                      background-size: 100%;}
+*/
+'
+
+/*
+.demo-card-square.mdl-card {width: 320px; height: 320px; }
+.demo-card-square > .mdl-card__title {color: #fff; background: url("/img/banner-background.JPG") bottom right 15% no-repeat #46B6AC ;
+                                      background-size: 100%;}
+
+
+.canvas {height: 1000px;}
+
+*/
+
+
+
