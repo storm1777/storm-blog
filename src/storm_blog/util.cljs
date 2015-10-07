@@ -8,8 +8,17 @@
   (:import
     [goog.net XhrIo]))
 
+(defn send-msg [chan text]
+  (async/put! chan [:send-msg text]))
+
 (defn- format-time [date]
   (goog.string/format "%02d:%02d" (.getHours date) (.getMinutes date)))
+
+(defn select [selector]
+  (js/document.querySelector selector))
+
+(defn value [el]
+  (.-value el))
 
 (defn- should-scroll? [node]
   (<=

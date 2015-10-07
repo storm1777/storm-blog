@@ -3,10 +3,8 @@
             [datascript.core :as d]
             [garden.core :refer [css]]
             [storm-blog.db :as db]
-            [storm-blog.css :as style]))
-
-(defn- send-msg [chan text]
-  (async/put! chan [:send-msg text]))
+            [storm-blog.css :as style]
+            [storm-blog.util :as u]))
 
 (rum/defc comment-section [db {own :comment/owner ema :comment/email
                                com :comment/content web :comment/website eid :db/id}]
@@ -14,14 +12,22 @@
      [:.owner own] [:.ema ema]
      [:.web web] [:.com com]])
 
-(defn extract-comment [eid]
+(defn val-sel [selector ] (u/value (u/select selector)))
+
+(defn extract-comment [article-eid]
+  {:db/id article-eid :article/comment
+   {:comment/owner    (val-sel ".add-owner")
+    :comment/email    (val-sel ".add-email")
+    :comment/website  (val-sel ".add-website")
+    :comment/content  (val-sel ".add-comment")}})
 
 (rum/defc comment-form [db {article-eid :db/id :or {article-eid 1}}]
-  [:form {:on-submit (fn [_] (add-comment) false)}
-   [:input.add-owner {:type "text" :placeholder "Name"}]
-   [:input.add-email {:type "text" :placeholder "Name"}]
-   [:input.add-website {:type "text" :placeholder "Name"}]
-   [:input.add-comment {:type "text" :placeholder "Name"}]])
+  [:form {:on-submit (fn [_] (js/alert (extract-comment article-eid)) false)}
+   [:input.add-owner   {:type :text :placeholder :Owner}]
+   [:input.add-email   {:type :text :placeholder :Email}]
+   [:input.add-website {:type :text :placeholder :Website}]
+   [:input.add-comment {:type :text :placeholder :Comment}]
+   [:input.add-submit  {:type "submit" :value "Add comment"}]])
 
 (rum/defc demo-card [db {title :card/title words :card/words buttons :card/buttons eid :db/id :as state}]
     [:.demo-card-square.mdl-card.mdl-shadow--2dp
