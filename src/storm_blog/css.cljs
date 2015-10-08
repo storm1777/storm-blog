@@ -15,7 +15,7 @@
                           :margin-bottom :80px}]
          [:.demo-main
           {:flex-shrink 0
-           :background [[:#ffffff "url(/img/banner-background.jpg)" :no-repeat :fixed :top]]}]
+           #_ #_ :background [[:#ffffff "url(/img/banner-background.jpg)" :no-repeat :fixed :top]]}]
          [:.article-banner
           {:background-image "url(/img/j-and-k-picture.JPG)"
            :background-size :cover
