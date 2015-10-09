@@ -1,7 +1,7 @@
 (ns ^:figwheel-always storm-blog.core
   (:require [om.core :as om :include-macros true]
             [storm-blog.util :as u]
-            [storm-blog.comps :as c]
+            [storm-blog.omps :as c]
             [storm-blog.db :as db]
             [cljs.core.async :as async]
             [datascript.core :as d]
@@ -31,12 +31,8 @@
 
 (defonce state (init))
 
-(defn widget [conn]
-  (om/component
-   (html (c/page @conn ))))
-
-(om/root widget conn
-  {:shared {:conn conn}
+(om/root c/article 1
+  {:shared {:db @conn}
    :target (. js/document (getElementById "app"))})
 
 

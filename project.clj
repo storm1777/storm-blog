@@ -9,7 +9,7 @@
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]
                  [sablono "0.3.6"]
                  [org.omcljs/om "0.9.0"]
-                 [rum "0.4.0"]
+                 [racehub/om-bootstrap "0.5.0"]
                  [datascript "0.13.0"]
                  [datascript-transit "0.2.0"]
                  [garden "1.3.0-SNAPSHOT"]
