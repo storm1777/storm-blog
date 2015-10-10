@@ -19,9 +19,57 @@
             [om-bootstrap.table :refer [table]]
             [sablono.core :as html :refer-macros [html]]))
 
+(defn handle-change [e data edit-key owner]
+  (om/transact! data edit-key (fn [_] (.. e -target -value))))
+
 (defmulti widgets
   (fn [[eid conn] _]
     (:widget/type (d/pull conn [:widget/type] eid))))
+
+(defmulti edit
+  (fn [[eid conn] _]
+    (:widget/type (d/pull conn [:widget/type] eid))))
+
+(defmethod edit :article [[eid db] owner {:keys [edit-key]}]
+  (reify
+    om/IInitState
+    (init-state [_]
+      {:title (:article/title (d/pull db [:article/title] eid))})
+    om/IRenderState
+    (render-state [this {:keys [title]}]
+      (p/panel {:header (i/input {:type "text"
+                                  :value title})
+                :list-group
+                (dom/ul {:class "list group"}
+                  (dom/li {:class "list-group-item"} (om/build-all edit
+                    (sort-by first (map conj (db/eav db :widget/owner eid) (repeat db))))))}))))
+
+(defmethod edit :par [[eid db] _]
+  (reify
+    om/IInitState
+    (init-state [_]
+      {:content (:par/content (d/pull db [:par/content] eid))})
+    om/IRenderState
+    (render-state [_ {:keys [content]}]
+      (i/input {:type "textarea"
+                :value content}))))
+
+(defmethod edit :section [[eid db] owner {:keys [edit-key]}]
+  (reify
+    om/IInitState
+    (init-state [_]
+      {:content (:section/content (d/pull db [:section/content] eid))})
+    om/IRenderState
+    (render-state [_ {:keys [content]}]
+      (i/input {:type "text"
+                :value content
+                :onChange (om/set-state! owner {:content edit-key})}))))
+
+(defmethod edit :default [[eid db] owner]
+  (reify
+    om/IRender
+    (render [this]
+      (dom/div "Edit component"))))
 
 (defmethod widgets :section [[eid db] _]
   (reify
@@ -87,21 +135,17 @@
       (let [db (:db (om/get-shared owner))]
         (g/grid {}
           (g/row {:class "show-grid"}
-            (g/col {:xs 12}
+            (g/col {:xs 6}
+              (om/build-all edit [[eid db]]))
+            (g/col {:xs 6}
               (p/panel {:header (:article/title (d/pull db [:article/title] eid))
                 :list-group
                 (dom/ul {:class "list group"}
                   (dom/li {:class "list-group-item"} (om/build-all widgets
                     (sort-by first (map conj (db/eav db :widget/owner eid) (repeat db)))))
                   (dom/li {:class "list-group-item"} (om/build-all widgets [[2 db] [3 db]]))
-                  (dom/li {:class "list-group-item"} (om/build-all widgets [[25 db]])))}
+                  (dom/li {:class "list-group-item"} (om/build-all edit [[25 db]])))}
                nil))))))))
-
-(defmethod widgets :article-creator [[eid db] owner]
-  (reify
-    om/IRender
-    (render [this]
-      (dom/div "Article Creation Component"))))
 
 (defmethod widgets :default [[eid db] owner]
   (reify
