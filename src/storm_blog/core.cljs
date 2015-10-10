@@ -31,7 +31,7 @@
 
 (defonce state (init))
 
-(om/root c/article 1
+(om/root c/widget [2 conn]
   {:shared {:db @conn}
    :target (. js/document (getElementById "app"))})
 

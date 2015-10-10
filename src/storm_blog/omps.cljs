@@ -19,16 +19,52 @@
             [om-bootstrap.table :refer [table]]
             [sablono.core :as html :refer-macros [html]]))
 
+(defmulti widgets
+  (fn [[eid conn] _]
+    (:widget/type (d/pull conn [:widget/type] eid))))
 
-(comment (defn comment-form [db {article-eid :db/id :or {article-eid 1}}]
-  [:form {:on-submit (fn [_] (js/alert (extract-comment article-eid)) false)}
-   [:input.add-owner   {:type :text :placeholder :Owner}]
-   [:input.add-email   {:type :text :placeholder :Email}]
-   [:input.add-website {:type :text :placeholder :Website}]
-   [:input.add-comment {:type :text :placeholder :Comment}]
-   [:input.add-submit  {:type "submit" :value "Add comment"}]]))
+(defmethod widgets :section [[eid db] _]
+  (reify
+    om/IRender
+    (render [_]
+      (dom/div (:section/content (d/pull db [:section/content] eid))))))
 
-(defn com [eid owner]
+(defmethod widgets :par [[eid db] _]
+  (reify
+    om/IRender
+    (render [_]
+      (dom/div (:par/content (d/pull db [:par/content] eid))))))
+
+(defmethod widgets :comment-form [[_ _] owner]
+  (reify
+    om/IRender
+    (render [this]
+            (dom/form {:class "form-horizontal"} "Add comment"
+              (i/input {:label "Input Wrapper"}
+                (g/row {}
+                  (g/col {:xs 4 :xs-offset 2} (i/input {:type "text" :class "form-control"
+                                           :placeholder "Name*"}))
+                  (g/col {:xs 1})
+                  (g/col {:xs 4} (i/input {:type "text" :class "form-control"
+                                           :placeholder "Email"}))))
+                  (i/input {:type "textarea"
+                            :label-classname "col-xs-2"
+                            :wrapper-classname "col-xs-10"
+                            :placeholder "Comment"})
+              (i/input {:type "checkbox" :label "Checkbox"
+                                :label-classname "col-xs-2"
+                                :wrapper-classname "col-xs-offset-2 col-xs-10"
+                                :help "Offset is applied to the wrapper."})))))
+
+(defmethod widgets :header [[eid db] owner]
+  (reify
+    om/IRender
+    (render [this]
+      (let [db (:db (om/get-shared owner))]
+        (r/page-header {} (:header/title (d/pull db [:header/title] eid))
+                       (dom/small "Subtitle for header"))))))
+
+(defmethod widgets :comment [[eid db] owner]
   (reify
     om/IInitState
     (init-state [_]
@@ -40,29 +76,38 @@
         (p/panel {:header (:comment/owner (d/pull db pullq eid))}
                  (:comment/content (d/pull db pullq eid)))))))
 
-(defn article [eid owner]
+(defmethod widgets :article [[eid db] owner]
   (reify
     om/IInitState
     (init-state [_]
       {:eid eid
        :pullq [:article/title]})
-    om/IRenderState
-    (render-state [this {:keys [pullq]}]
+    om/IRender
+    (render [this]
       (let [db (:db (om/get-shared owner))]
         (g/grid {}
           (g/row {:class "show-grid"}
-            (g/col {:xs 8 :xs-offset 2}
+            (g/col {:xs 12}
               (p/panel {:header (:article/title (d/pull db [:article/title] eid))
                 :list-group
                 (dom/ul {:class "list group"}
-                  (dom/li {:class "list-group-item"} (:article/content (d/pull db [:article/content] eid)))
-                  (dom/li {:class "list-group-item"} (om/build-all com [2 3]))
-                  (dom/li {:class "list-group-item"} "Item 3"))}
+                  (dom/li {:class "list-group-item"} (om/build-all widgets
+                    (sort-by first (map conj (db/eav db :widget/owner eid) (repeat db)))))
+                  (dom/li {:class "list-group-item"} (om/build-all widgets [[2 db] [3 db]]))
+                #_(dom/li {:class "list-group-item"} (om/build-all widgets [[6 db]])))}
                nil))))))))
 
-(defn widget [_ owner]
+(defmethod widgets :default [[eid db] owner]
   (reify
     om/IRender
     (render [this]
-            (p/panel
-            (om/build-all article [1])))))
+      (dom/div {} eid ": " (:widget/type (d/pull db [:widget/type] eid))))))
+
+(defn widget [[_ conn] owner]
+  (reify
+    om/IRender
+    (render [_]
+      (let [db @conn]
+        (dom/div
+          (om/build-all widgets [[8 db] [1 db] [6 db] [2 db]])
+          (om/build-all widgets [[2 db] [3 db]]))))))

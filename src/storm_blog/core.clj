@@ -12,7 +12,15 @@
        (.timeEnd js/console k#)
        res#)))
 
+
 (comment
+
+(def test-set #{[24] [23] [20]})
+
+(map conj test-set (repeat 1))
+
+((juxt conj) #{[3] [4]} 4)
+
 
 (def schema {:article/title    {}
              :article/content  {:db.cardinality :db.cardinality/many}

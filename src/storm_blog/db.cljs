@@ -24,4 +24,10 @@
          :where [?e ?a ?v]]
        db eid att))
 
+(defn eav [db att v]
+  (d/q '[:find ?e
+         :in $ ?a ?v
+         :where [?e ?a ?v]]
+       db att v))
+
 
