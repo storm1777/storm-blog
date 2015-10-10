@@ -94,8 +94,14 @@
                   (dom/li {:class "list-group-item"} (om/build-all widgets
                     (sort-by first (map conj (db/eav db :widget/owner eid) (repeat db)))))
                   (dom/li {:class "list-group-item"} (om/build-all widgets [[2 db] [3 db]]))
-                #_(dom/li {:class "list-group-item"} (om/build-all widgets [[6 db]])))}
+                  (dom/li {:class "list-group-item"} (om/build-all widgets [[25 db]])))}
                nil))))))))
+
+(defmethod widgets :article-creator [[eid db] owner]
+  (reify
+    om/IRender
+    (render [this]
+      (dom/div "Article Creation Component"))))
 
 (defmethod widgets :default [[eid db] owner]
   (reify
@@ -111,3 +117,10 @@
         (dom/div
           (om/build-all widgets [[8 db] [1 db] [6 db] [2 db]])
           (om/build-all widgets [[2 db] [3 db]]))))))
+
+
+
+
+
+
+

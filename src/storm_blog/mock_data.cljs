@@ -138,4 +138,8 @@
     :widget/type :section
     :widget/owner 1
     :widget/order 15
-    :section/content "Overall"}])
+    :section/content "Overall"}
+   {:db/id -25
+    :widget/type :comment-form}
+   {:db/id -26
+    :widget/type :article-creator}])
