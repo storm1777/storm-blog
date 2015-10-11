@@ -3,7 +3,8 @@
    [clojure.set :as set]
    [clojure.string :as str]
    [datascript.core :as d]
-   [datascript.transit :as dt]))
+   [datascript.transit :as dt]
+   [clojure.core.async :as async :refer :all]))
 
 (defmacro profile [k & body]
   `(let [k# ~k]
@@ -12,6 +13,28 @@
        (.timeEnd js/console k#)
        res#)))
 
+
+(go (>! c 4))
+
+
+(def echo-chan (chan))
+(go
+ (let [msg (<! echo-chan)]
+   msg))
+
+
+(def c (chan 1))
+(go-loop []
+         (let [x (<! c)]
+           (str "Got a value in this loop:" x))
+         (recur))
+
+(doseq [n (range 3)] (put! c n))
+(str 34 4)
+(let [c (chan 10)]
+  (>!! c "hello")
+  (assert (= "hello" (<!! c)))
+  (close! c))
 
 (comment
 
