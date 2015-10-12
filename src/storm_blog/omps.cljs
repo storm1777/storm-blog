@@ -22,6 +22,7 @@
   (:require-macros
    [cljs.core.async.macros :refer [go go-loop]]))
 
+
 (defn handle-change [e data edit-key owner]
   (om/transact! data edit-key (fn [_] (.. e -target -value))))
 
@@ -33,45 +34,62 @@
   (fn [[eid db] _]
     (:widget/type (d/pull db [:widget/type] eid))))
 
-(defmethod edit :article [[eid _] owner {:keys [edit-key]}]
+(defmethod edit :article [[eid db] owner {:keys [edit-key]}]
   (reify
     om/IInitState
     (init-state [_]
-      (let [db (:db (om/get-shared owner))]
-        {:title (:article/title (d/pull db [:article/title] eid))}))
+      {:title (:article/title (d/pull db [:article/title] eid))})
+    om/IShouldUpdate
+    (should-update [_ _ _]
+      false)
     om/IRenderState
     (render-state [this {:keys [title]}]
-      (let [db (:db (om/get-shared owner))]
-        (p/panel {:header (i/input {:type "text"
-                                    :value title})
-                  :list-group
-                  (dom/ul {:class "list group"}
-                    (dom/li {:class "list-group-item"} (om/build-all edit
-                      (sort-by first (map conj (db/eav db :widget/owner eid) (repeat db))))))})))))
+      (p/panel {:header (i/input {:type "text"
+                                  :addon-before "<header/>"
+                                  :value title})
+                 :list-group
+                 (dom/ul {:class "list group"}
+                   (dom/li {:class "list-group-item"} (om/build-all edit
+                     (sort-by first (map conj (db/eav db :widget/owner eid) (repeat db))))))}))))
 
-(defmethod edit :par [[eid _] owner]
+(defn section-template [eid content]
+  {:db/id eid
+   :widget/owner 1
+   :widget/type :section
+   :widget/order 15
+   :section/content content})
+
+(defn par-template [eid content]
+  {:db/id eid
+   :widget/owner 1
+   :widget/type :par
+   :widget/order 15
+   :par/content content})
+
+(defmethod edit :par [[eid db] owner]
   (reify
-    om/IInitState
-    (init-state [_]
-      (let [db (:db (om/get-shared owner))]
-        {:content (:par/content (d/pull db [:par/content] eid))}))
-    om/IRenderState
-    (render-state [_ {:keys [content]}]
-      (i/input {:type "textarea"
-                :value content}))))
+    om/IRender
+    (render [_]
+      (let [events (:events (om/get-shared owner))]
+        (dom/div
+        (i/input {:type "textarea"
+                  :addon-before "<p/>"
+                  :value (:par/content (d/pull db [:par/content] eid))
+                  :rows 7
+                  :onChange #(let [new-value (-> % .-target .-value)]
+                                 (go (>! events [(par-template eid new-value)])))})
+        (b/button {:bs-style "primary" :bs-size "small"} "Small button"))))))
 
 (defmethod edit :section [[eid db] owner {:keys [edit-key]}]
   (reify
     om/IRender
     (render [_]
       (let [events (:events (om/get-shared owner))]
-          (i/input {:type "text"
-                :value (:section/content (d/pull db [:section/content] eid))
-                :onChange #(go (>! events [{:db/id 24
-                                           :widget/type :section
-                                           :widget/owner 1
-                                           :widget/order 15
-                                           :section/content "test"}]))})))))
+        (i/input {:type "text"
+                  :addon-before "<section/>"
+                  :value (:section/content (d/pull db [:section/content] eid))
+                  :onChange #(let [new-value (-> % .-target .-value)]
+                               (go (>! events [(section-template eid new-value)])))})))))
 
 (defmethod edit :default [[eid _] _]
   (reify
@@ -83,8 +101,7 @@
   (reify
     om/IRender
       (render [_]
-        (let [db-1 (:db (om/get-shared owner))]
-          (dom/div (:section/content (d/pull db [:section/content] eid)))))))
+        (dom/div (:section/content (d/pull db [:section/content] eid))))))
 
 (defmethod widgets :par [[eid db] owner]
   (reify
@@ -160,7 +177,7 @@
     (render [this]
        (dom/div {} eid ": " (:widget/type (d/pull db [:widget/type] eid))))))
 
-(defn widget [[_ conn] owner]
+(defn widget [conn owner]
   (reify
     om/IRender
     (render [_]

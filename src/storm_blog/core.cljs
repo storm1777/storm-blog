@@ -16,18 +16,16 @@
   "All good")
 
 (def conn (db/create-db))
-(db/populate-db! conn)
-(u/load-articles! conn)
+(defonce testa (db/populate-db! conn))
 
 (defn main []
-  (let [events (async/chan)]
+  (let [events (async/chan 10)]
     ;; server loop
     (go
      (while true
        (d/transact! conn (<! events))))
-    (om/root c/widget [8 conn]
-             {:shared {:db @conn
-                       :events events}
+    (om/root c/widget conn
+             {:shared {:events events}
               :target (. js/document (getElementById "app"))})))
 
 (main)
