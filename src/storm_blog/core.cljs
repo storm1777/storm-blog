@@ -16,7 +16,7 @@
   "All good")
 
 (def conn (db/create-db))
-(defonce testa (db/populate-db! conn))
+(def testa (db/populate-db! conn))
 
 (defn main []
   (let [events (async/chan 10)]

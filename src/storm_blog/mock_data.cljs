@@ -18,7 +18,7 @@
 (def fixtures
   [{:db/id -1
     :widget/type :article
-    :article/title "Article 1"
+    :article/title "Plitvice Lakes, Croatia"
     :article/content "Article Content"
     :article/category "Location Feature"
     :article/list ["1" "2" "3" "4"]

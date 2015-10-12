@@ -22,6 +22,31 @@
   (:require-macros
    [cljs.core.async.macros :refer [go go-loop]]))
 
+(defn dropdown [title events]
+  (n/nav {:collapsible? true}
+   (b/dropdown {:bs-style "Primary", :title title :bs-size "xsmall"}
+               (b/menu-item {:key 1
+                             :on-click #(go (>! events [{:db/id -1
+                                                         :widget/type :section
+                                                         :widget/owner 1
+                                                         :widget/content "New Section"}]))}  "Section")
+               (b/menu-item {:key 2
+                             :onClick #(go (>! events [{:db/id -1
+                                                        :widget/type :par
+                                                        :widget/owner 1
+                                                        :widget/content "New Paragraph"}]))} "Paragraph")
+               (b/menu-item {:key 3
+                             :onClick #(go (>! events [{:db/id -1
+                                                        :widget/type :section
+                                                        :widget/owner 1}]))} "List")
+               (b/menu-item {:key 4
+                             :onClick #(go (>! events [{:db/id -1
+                                                        :widget/type :section
+                                                        :widget/owner 1}]))} "Image")
+               (b/menu-item {:key 5
+                             :onClick #(go (>! events [{:db/id -1
+                                                        :widget/type :section
+                                                        :widget/owner 1}]))} "Link"))))
 
 (defn handle-change [e data edit-key owner]
   (om/transact! data edit-key (fn [_] (.. e -target -value))))
@@ -39,16 +64,13 @@
     om/IInitState
     (init-state [_]
       {:title (:article/title (d/pull db [:article/title] eid))})
-    om/IShouldUpdate
-    (should-update [_ _ _]
-      false)
     om/IRenderState
     (render-state [this {:keys [title]}]
       (p/panel {:header (i/input {:type "text"
                                   :addon-before "<header/>"
                                   :value title})
                  :list-group
-                 (dom/ul {:class "list group"}
+                 (dom/ul {:class "list-group"}
                    (dom/li {:class "list-group-item"} (om/build-all edit
                      (sort-by first (map conj (db/eav db :widget/owner eid) (repeat db))))))}))))
 
@@ -68,25 +90,31 @@
 
 (defmethod edit :par [[eid db] owner]
   (reify
+    om/IShouldUpdate
+    (should-update [_ _ _]
+      false)
     om/IRender
     (render [_]
       (let [events (:events (om/get-shared owner))]
         (dom/div
         (i/input {:type "textarea"
-                  :addon-before "<p/>"
+                  :addon-before (dropdown "<p/>" events)
+                  :addon-after  (dropdown "Add" events)
                   :value (:par/content (d/pull db [:par/content] eid))
-                  :rows 7
+                  :rows 3
                   :onChange #(let [new-value (-> % .-target .-value)]
-                                 (go (>! events [(par-template eid new-value)])))})
-        (b/button {:bs-style "primary" :bs-size "small"} "Small button"))))))
+                                 (go (>! events [(par-template eid new-value)])))}))))))
 
 (defmethod edit :section [[eid db] owner {:keys [edit-key]}]
   (reify
+    om/IShouldUpdate
+    (should-update [_ _ _]
+      false)
     om/IRender
     (render [_]
       (let [events (:events (om/get-shared owner))]
         (i/input {:type "text"
-                  :addon-before "<section/>"
+                  :addon-before (dropdown "<section/>" events)
                   :value (:section/content (d/pull db [:section/content] eid))
                   :onChange #(let [new-value (-> % .-target .-value)]
                                (go (>! events [(section-template eid new-value)])))})))))
@@ -101,13 +129,13 @@
   (reify
     om/IRender
       (render [_]
-        (dom/div (:section/content (d/pull db [:section/content] eid))))))
+        (dom/h3 (:section/content (d/pull db [:section/content] eid))))))
 
 (defmethod widgets :par [[eid db] owner]
   (reify
     om/IRender
     (render [_]
-        (dom/div (:par/content (d/pull db [:par/content] eid))))))
+        (dom/p (:par/content (d/pull db [:par/content] eid))))))
 
 (defmethod widgets :comment-form [[_ db] owner]
   (reify
@@ -164,7 +192,7 @@
             (g/col {:xs 6}
               (p/panel {:header (:article/title (d/pull db [:article/title] eid))
                 :list-group
-                (dom/ul {:class "list group"}
+                (dom/ul {:class "list-group"}
                   (dom/li {:class "list-group-item"} (om/build-all widgets
                     (sort-by first (map conj (db/eav db :widget/owner eid) (repeat db)))))
                   (dom/li {:class "list-group-item"} (om/build-all widgets [[2 db] [3 db]]))
