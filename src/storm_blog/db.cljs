@@ -33,4 +33,18 @@
 (defn g [db att eid]
   (att (d/pull db [att] eid)))
 
+(defn section-template [eid content]
+  {:db/id eid
+   :widget/owner 1
+   :widget/type :section
+   :widget/order 15
+   :section/content content})
+
+(defn par-template [eid content]
+  {:db/id eid
+   :widget/owner 1
+   :widget/type :par
+   :widget/order 15
+   :par/content content})
+
 
