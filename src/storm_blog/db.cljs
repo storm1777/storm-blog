@@ -30,4 +30,7 @@
          :where [?e ?a ?v]]
        db att v))
 
+(defn g [db att eid]
+  (att (d/pull db [att] eid)))
+
 
