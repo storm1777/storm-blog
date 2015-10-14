@@ -5,7 +5,6 @@
             [storm-blog.db :as db]
             [cljs.core.async :as async :refer [<! >! put! take!]]
             [datascript.core :as d]
-            [om.dom :as dom]
             [goog.dom :as gdom])
   (:require-macros
    [cljs.core.async.macros :refer [go go-loop]]))

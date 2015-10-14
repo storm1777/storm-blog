@@ -1,37 +1,38 @@
 (ns storm-blog.omps
   (:require [om.core :as om :include-macros true]
-            [om-tools.dom :as dom :include-macros true]
             [datascript.core :as d]
             [garden.core :refer [css]]
             [storm-blog.db :as db]
             [storm-blog.css :as style]
             [storm-blog.util :as u]
-            [om-bootstrap.button :as b]
-            [om-bootstrap.grid :as g]
-            [om-bootstrap.input :as i]
-            [om-bootstrap.mixins :as m]
-            [om-bootstrap.modal :as md]
-            [om-bootstrap.nav :as n]
-            [om-bootstrap.pagination :as pg]
-            [om-bootstrap.panel :as p]
-            [om-bootstrap.progress-bar :as pb]
-            [om-bootstrap.random :as r]
-            [om-bootstrap.table :refer [table]]
             [sablono.core :as html :refer-macros [html]]
             [cljs.core.async :as async :refer [<! >! put! take!]])
   (:require-macros
    [cljs.core.async.macros :refer [go go-loop]]))
+
+(def actions {:add-par      (fn [_ eid events]
+                              (go (>! events [{:db/id -1 :widget/type :par
+                                     :par/content "New Paragraph" :widget/owner 1}])))
+              :add-section  (fn [_ eid events]
+                              (go (>! events [{:db/id -1 :widget/type :section
+                                     :section/content "New Section" :widget/owner 1}])))
+              :section->par (fn [db eid events]
+                              (go (>! events [{:db/id eid :widget/type :section
+                                              :section/content (db/g db :par/content eid)}])))
+              :par->section (fn [db eid events]
+                              (go (>! events [{:db/id eid :widget/type :section
+                                              :par/content (db/g db :section/content eid)}])))})
 
 (defn handle-change [e data edit-key owner]
   (om/transact! data edit-key (fn [_] (.. e -target -value))))
 
 (defmulti widgets
   (fn [[eid db] _]
-     (:widget/type (d/pull db [:widget/type] eid))))
+     (db/g db :widget/type eid)))
 
 (defmulti edit
   (fn [[eid db] _]
-    (:widget/type (d/pull db [:widget/type] eid))))
+    (db/g db :widget/type eid)))
 
 (defmethod edit :article [[eid db] owner]
   (reify
@@ -51,6 +52,18 @@
           [:li.list-group-item (om/build-all edit (sort-by first (map conj (db/eav db :widget/owner eid)
                                                                       (repeat db))))]]]]))))
 
+(defn dropdown-btn [btn-title & menuitem-pairs]
+  [:span
+   [:button.btn.btn-default.dropdown-toggle
+    {:data-toggle "dropdown"
+     :type "button"} btn-title
+    [:span.caret]]
+   [:ul.dropdown-menu {:role "menu"}
+    (map (fn [menu args]
+           [:li {:role "presentation" :tabIndex -1}
+            [:a args menu]])
+         menuitem-pairs)]])
+
 (defmethod edit :par [[eid db] owner]
   (reify
     om/IRender
@@ -59,29 +72,13 @@
         (html
           [:.input-group
            [:.input-group-addon
-            [:button.btn.btn-default {:type "button"} "+"]
-            [:button.btn.btn-default {:type "button"} "B"]
-            [:button.btn.btn-default {:type "button"} "I"]
-            [:button.btn.btn-default.dropdown-toggle
-             {:data-toggle "dropdown"
-              :type "button"}
-             "P"
-             [:span.caret]]
-            [:ul.dropdown-menu {:role "menu"}
-             [:li {:role "presentation"}
-              [:a {:onClick #(go (>! events [{:db/id eid :widget/type :section
-                                              :section/content (db/g db :par/content eid)}]))} "Section"]]
-             #_ [:li {:role "presentation" :tabIndex -1}
-              [:a {:onClick #(go (>! events [{:db/id eid :widget/type :par
-                                              :par/content (db/g db :section/content eid)}]))} "Paragraph"]]
-             [:li {:role "presentation" :tabIndex -1}
-              [:a {:href "#":role "menuitem"} "Image"]]
-             [:li {:role "presentation" :tabIndex -1}
-              [:a {:href "#" :role "menuitem"} "null"]]]]
+            (map (fn [name] [:button.btn.btn-default {:type "button"
+                                                      :onClick #((:add-par actions) db eid events)}
+                             name]) ["+" "B" "I"])
+            (dropdown-btn "Par" ["par" {:onClick #((:add-par actions) db eid events)}])]
            [:textarea.form-control {:rows 3
                                     :value (:par/content (d/pull db [:par/content] eid))
-                                    :onChange #(let [new-value (-> % .-target .-value)]
-                                              (go (>! events [(db/par-template eid new-value)])))}]])))))
+                                    :onChange #((:add-par actions) db eid events)}]])))))
 
 (defmethod edit :section [[eid db] owner {:keys [edit-key]}]
   (reify
@@ -92,23 +89,8 @@
          [:.input-group
           [:.input-group-btn
            [:button.btn.btn-default {:type "button"
-                                     :onClick #(go (>! events [{:db/id -1 :widget/type :section
-                                     :section/content "New Section" :widget/owner 1}]))} "+"]
-           [:button.btn.btn-default.dropdown-toggle {:data-toggle "dropdown"
-                                                     :type "button"}
-            "Section"
-            [:span.caret]]
-           [:ul.dropdown-menu {:role "menu"}
-            #_ [:li {:role "presentation"}
-              [:a {:onClick #(go (>! events [{:db/id eid :widget/type :section
-                                              :section/content (db/g db :par/content eid)}]))} "Section"]]
-            [:li {:role "presentation" :tabIndex -1}
-              [:a {:onClick #(go (>! events [{:db/id eid :widget/type :par
-                                              :par/content (db/g db :section/content eid)}]))} "Paragraph"]]
-            [:li {:role "presentation" :tabIndex -1}
-             [:a {:href "#":role "menuitem"} "Image"]]
-            [:li {:role "presentation" :tabIndex -1}
-             [:a {:href "#" :role "menuitem"} "null"]]]]
+                                     :onClick #((:add-section actions) db eid events)} "+"]
+           (dropdown-btn "Section" ["par" {:onClick #((:add-par actions) db eid events)}])]
            [:input.form-control {:type "textarea" :rows 3
                                  :value (db/g db :section/content eid)
                                  :onChange #(let [new-value (-> % .-target .-value)]
@@ -118,48 +100,19 @@
   (reify
     om/IRender
     (render [this]
-      (dom/div "Edit component"))))
+      (html [:div  "Edit component"]))))
 
 (defmethod widgets :section [[eid db] owner]
   (reify
     om/IRender
       (render [_]
-        (dom/h3 (:section/content (d/pull db [:section/content] eid))))))
+        (html [:h3 (db/g db :section/content eid)]))))
 
 (defmethod widgets :par [[eid db] owner]
   (reify
     om/IRender
     (render [_]
-        (dom/p (:par/content (d/pull db [:par/content] eid))))))
-
-(defmethod widgets :comment-form [[_ db] owner]
-  (reify
-    om/IRender
-    (render [this]
-            (dom/form {:class "form-horizontal"} "Add comment"
-              (i/input {:label "Input Wrapper"}
-                (g/row {}
-                  (g/col {:xs 4 :xs-offset 2} (i/input {:type "text" :class "form-control"
-                                           :placeholder "Name*"}))
-                  (g/col {:xs 1})
-                  (g/col {:xs 4} (i/input {:type "text" :class "form-control"
-                                           :placeholder "Email"}))))
-                  (i/input {:type "textarea"
-                            :label-classname "col-xs-2"
-                            :wrapper-classname "col-xs-10"
-                            :placeholder "Comment"})
-              (i/input {:type "checkbox" :label "Checkbox"
-                                :label-classname "col-xs-2"
-                                :wrapper-classname "col-xs-offset-2 col-xs-10"
-                                :help "Offset is applied to the wrapper."})))))
-
-#_(defmethod widgets :header [[eid db] owner]
-  (reify
-    om/IRender
-    (render [this]
-      (html
-       [:.page-header (db/g db :header/title eid)
-        [:small "Subtitle for header"]]))))
+        (html [:p (db/g db :par/content eid)]))))
 
 (defmethod widgets :header [[eid db] owner]
   (reify
