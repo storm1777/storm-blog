@@ -38,13 +38,13 @@
    :widget/owner 1
    :widget/type :section
    :widget/order 15
-   :section/content content})
+   :widget/content content})
 
 (defn par-template [eid content]
   {:db/id eid
    :widget/owner 1
    :widget/type :par
    :widget/order 15
-   :par/content content})
+   :widget/content content})
 
 
