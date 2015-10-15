@@ -11,36 +11,9 @@
   (:require-macros
    [cljs.core.async.macros :refer [go go-loop]]))
 
-
-
 (defmulti widgets
   (fn [[eid db] _]
      (db/g db :widget/type eid)))
-
-(defmulti edit
-  (fn [[eid db] _]
-    (db/g db :widget/type eid)))
-
-(defmethod edit :article [[eid db] owner]
-  (reify
-    om/IRender
-    (render [this]
-      (html
-       [:.panel.panel-default
-        [:.panel-heading
-         [:label {:for "example"} "Example"]
-         [:.input-group
-          [:.input-group-addon "<header/>"]
-          [:input#example.form-control
-           {:type "header" :placeholder "Example"}]
-          [:.input-group-addon "00"]]]
-        [:ul.list-group
-         [:li.list-group-item
-          (om/build-all edit
-                        (sort-by first
-                                 (map conj
-                                      (db/eav db :widget/owner eid)
-                                      (repeat db))))]]]))))
 
 (defn dropdown-btn [btn-title & menuitem-pairs]
   [:span
@@ -52,85 +25,59 @@
     (map (fn [[title args]]
            [:li [:a args title]]) menuitem-pairs)]])
 
-#_ (defmethod edit :par [[eid db] owner]
-  (reify
-    om/IRender
-    (render [_]
-      (let [events (:events (om/get-shared owner))]
-        (html
-          [:.input-group
-           [:.input-group-addon
-            (map (fn [name] [:button.btn.btn-default {:type "button"
-                                                      :onClick #(add-par db eid events)}
-                             name]) ["+" "B" "I"])
-            (dropdown-btn "Par"
-                          ["par" {:onClick #(->par db eid events)}]
-                          ["Section" {:onClick #(->section db eid events)}])]
-           [:textarea.form-control {:rows 3
-                                    :value (db/g db :widget/content eid)
-                                    :onChange #(a/add-par db eid events)}]])))))
-
-(defmethod edit :par [[eid db] owner]
-  (reify
-    om/IInitState
-    (init-state [_]
-      {:show-dropdown false})
-    om/IRenderState
-    (render-state [this state]
-      (let [events (:events (om/get-shared owner))]
-        (html
-          [:.input-group {:onMouseEnter #(om/set-state! owner :show-dropdown true)
-                          :onMouseLeave #(om/set-state! owner :show-dropdown false)}
-           [:.input-group-addon.btn.btn-default {:onClick #(a/add-par db eid events)} "+"]
-           [:.input-group-addon.btn.btn-default {:onClick #(a/retract db eid events)} "-"]
-           [:textarea.form-control {:rows 3
-                                    :value (db/g db :widget/content eid)
-                                    :onChange #(let [new-value (-> % .-target .-value)]
-                                           (go (>! events [(db/par-template eid new-value)])))
-                                    }]
-           (when (:show-dropdown state)
-             [:.input-group-addon.btn.btn-default {:onClick #(a/retract db eid events)} "-"]
-             #_ (dropdown-btn "Par"
-                          ["par" {:onClick #(a/->par db eid events)}]
-                          ["Section" {:onClick #(a/->section db eid events)}]))])))))
-
-(defmethod edit :section [[eid db] owner]
-  (reify
-    om/IInitState
-    (init-state [_]
-      {:show-dropdown false})
-    om/IRenderState
-    (render-state [this state]
-    (let [events (:events (om/get-shared owner))]
-      (html
-       [:.input-group {:onMouseEnter #(om/set-state! owner :show-dropdown true)
-                       :onMouseLeave #(om/set-state! owner :show-dropdown false)}
-        [:.input-group-addon.btn.btn-default {:onClick #(a/add-par db eid events)} "+"]
-        [:.input-group-addon.btn.btn-default {:onClick #(a/retract db eid events)} "-"]
-        [:input.form-control {:type "textarea" :rows 3
-                              :value (db/g db :widget/content eid)
-                              :onChange #(let [new-value (-> % .-target .-value)]
-                                           (go (>! events [(db/section-template eid new-value)])))}]
-        (when (:show-dropdown state)
-             [:.input-group-addon.btn.btn-default {:onClick #(a/retract db eid events)} "-"])])))))
-
-(defmethod edit :default [[eid _] _]
-  (reify
-    om/IRender
-    (render [this]
-      (html [:div  "Edit component"]))))
-
 (defmethod widgets :section [[eid db] owner]
   (reify
-    om/IRender
-      (render [_]
-        (html [:h3 (db/g db :widget/content eid)]))))
+    om/IInitState
+    (init-state [_]
+      {:edit false
+       :show-dropdown false})
+    om/IRenderState
+    (render-state [this state]
+      (html
+       (if (not (:show-dropdown state))
+         [:h3 {:on-click #(om/set-state! owner :show-dropdown true)
+               :on-mouse-leave #(om/set-state! owner :show-dropdown false)}
+          (db/g db :widget/content eid)]
+         (let [events (:events (om/get-shared owner))]
+           [:.input-group {:on-mouse-enter #(om/set-state! owner :show-dropdown true)
+                           :on-mouse-leave #(om/set-state! owner :show-dropdown false)}
+            [:.input-group-addon.btn.btn-default {:onClick #(a/add-par db eid events)} "+"]
+            [:.input-group-addon.btn.btn-default {:onClick #(a/retract db eid events)} "-"]
+            [:input.form-control {:type "textarea" :rows 3
+                                  :value (db/g db :widget/content eid)
+                                  :onChange #(let [new-value (-> % .-target .-value)]
+                                               (go (>! events [(db/section-template eid new-value)])))}]
+            (when (:show-dropdown state)
+                 [:.input-group-addon.btn.btn-default {:onClick #(a/retract db eid events)} "-"])]))))))
 
 (defmethod widgets :par [[eid db] owner]
   (reify
-    om/IRender
-    (render [_]
-        (html [:p (db/g db :widget/content eid)]))))
+    om/IInitState
+    (init-state [_]
+      {:edit false
+       :show-dropdown false})
+    om/IRenderState
+    (render-state [this state]
+        (html
+         (if (not (:show-dropdown state))
+           [:p {:on-click #(om/set-state! owner :show-dropdown true)
+                :on-mouse-leave #(om/set-state! owner :show-dropdown false)}
+            (db/g db :widget/content eid)]
+           (let [events (:events (om/get-shared owner))]
+             [:.input-group {:on-mouse-enter #(om/set-state! owner :show-dropdown true)
+                             :on-mouse-leave #(om/set-state! owner :show-dropdown false)}
+              [:.input-group-addon.btn.btn-default {:onClick #(a/add-par db eid events)} "+"]
+              [:.input-group-addon.btn.btn-default {:onClick #(a/retract db eid events)} "-"]
+              [:textarea.form-control {:rows 4
+                                       :value (db/g db :widget/content eid)
+                                       :onChange #(let [new-value (-> % .-target .-value)]
+                                                    (go (>! events [(db/par-template eid new-value)])))
+                                       }]
+              (when (:show-dropdown state)
+                [:.input-group-addon.btn.btn-default {:onClick #(a/retract db eid events)} "-"]
+                #_ (dropdown-btn "Par"
+                                 ["par" {:onClick #(a/->par db eid events)}]
+                                 ["Section" {:onClick #(a/->section db eid events)}]))]))))))
 
 (defmethod widgets :header [[eid db] owner]
   (reify
@@ -168,7 +115,25 @@
         (html
          [:.row
           [:.col-md-1]
-          [:.col-md-5 (om/build-all edit [[eid db]])]
+          [:.col-md-2
+           [:.panel.panel-default
+            [:.panel-heading "Locations"]
+            [:ul.list-group
+             (map (fn [loc] [:li.list-group-item (first loc) [:span.badge 1]])
+                  (d/q '[:find ?v
+                         :where [?e :article/country ?v]] db))]]
+           [:.panel.panel-default
+            [:.panel-heading "Categories"]
+            [:ul.list-group
+             (map (fn [loc] [:li.list-group-item (first loc) [:span.badge 1]])
+                  (d/q '[:find ?v
+                         :where [?e :article/category ?v]] db))]]
+           [:.panel.panel-default
+            [:.panel-heading "Archive"]
+            [:ul.list-group
+             (map (fn [loc] [:li.list-group-item (first loc) [:span.badge 1]])
+                  (d/q '[:find ?v
+                         :where [?e :article/date ?v]] db))]]]
           [:.col-md-5
            [:.panel.panel-default
             [:.panel-heading "Plitvice Lakes"]
@@ -176,7 +141,12 @@
              [:li.list-group-item
               (om/build-all widgets (sort-by first (map conj (db/eav db :widget/owner eid) (repeat db))))]
              [:li.list-group-item (om/build-all widgets [[2 db] [3 db]])]
-             [:li.list-group-item (om/build-all widgets [[25 db]])]]]]])))))
+             [:li.list-group-item (om/build-all widgets [[25 db]])]]]]
+          [:.col-md-3
+           [:.panel.panel-default
+            [:.panel-heading "About us"]
+            [:ul.list-group
+             [:p (map (partial str "blab blah") (range 100))]]]]])))))
 
 (defmethod widgets :default [[eid db] owner]
   (reify

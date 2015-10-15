@@ -19,11 +19,13 @@
   [{:db/id -1
     :widget/type :article
     :article/title "Plitvice Lakes, Croatia"
+    :article/country "Croatia"
     :widget/content "Article Content"
     :article/category "Location Feature"
     :article/list ["1" "2" "3" "4"]
     :article/source "/edn/article-1.edn"
-    :article/comment [-2 -3]}
+    :article/comment [-2 -3]
+    :article/date "October 14th, 2015"}
    {:db/id -4
     :widget/type :card
     :card/title "Plitvice Lakes, Croatia"
@@ -142,4 +144,9 @@
    {:db/id -25
     :widget/type :comment-form}
    {:db/id -26
-    :widget/type :article-creator}])
+    :widget/type :article-creator}
+   {:db/id -27
+    :widget/type :img
+    :widget/owner 1
+    :widget/order 16
+    :widget/content "image source"}])
