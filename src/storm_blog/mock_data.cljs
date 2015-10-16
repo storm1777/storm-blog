@@ -40,7 +40,9 @@
     :widget/type :article
     :article/title "Article 2"
     :widget/content "Article Content"
+    :article/country "Ireland"
     :article/category "Location Feature"
+    :article/date "October 15th, 2015"
     :article/list ["1" "2" "3" "4"]
     :article/source "/edn/article-2.edn"}
    {:db/id -7
