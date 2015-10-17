@@ -52,7 +52,7 @@
     :widget/type :comment
     :widget/content "Hello World"
     :comment/owner "The Commenter"
-    :comment/email "email@email.com"
+    :comment/email "storm.jeremy@gmail.com"
     :comment/website "email.com"}
    {:db/id -3
     :widget/type :comment

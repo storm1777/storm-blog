@@ -3,6 +3,7 @@
             [storm-blog.util :as u]
             [storm-blog.omps :as c]
             [storm-blog.db :as db]
+            [storm-blog.md5 :as md5]
             [cljs.core.async :as async :refer [<! >! put! take!]]
             [datascript.core :as d]
             [goog.dom :as gdom])

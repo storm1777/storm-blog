@@ -6,6 +6,7 @@
             [storm-blog.db :as db]
             [storm-blog.css :as style]
             [storm-blog.util :as u]
+            [storm-blog.md5 :as md5]
             [sablono.core :as html :refer-macros [html]]
             [cljs.core.async :as async :refer [<! >! put! take!]])
   (:require-macros
@@ -41,6 +42,36 @@
                              :data-slide "next"}
     [:span.glyphicon.glyphicon-chevron-right {:aria-hidden "true"}]
     [:span.sr-only "Next"]]])
+
+(defmethod widgets :carousel [[eid db] owner]
+  (reify
+    om/IRender
+    (render [_]
+      [:.carousel.slide {:data-ride "carousel" :id "carousel-example-generic"
+                         :data-interval "false"}
+       [:ol.carousel-indicators
+        [:li.active {:data-target "#carousel-example-generic" :data-slide-to "0"}]
+        [:li        {:data-target "#carousel-example-generic" :data-slide-to "1"}]
+        [:li        {:data-target "#carousel-example-generic" :data-slide-to "2"}]]
+       [:.carousel-inner {:role "listbox"}
+        [:.item.active
+         [:img {:src "/img/parliament1.jpg"}]
+         [:.carousel-caption [:h3 "Hungarian Parliament"]]]
+        [:.item
+         [:img {:src "/img/banner-background.jpg"}]
+         [:.carousel-caption [:h4 "Plitice National Lakes"]]]
+        [:.item
+         [:img {:src "/img/parliament0.jpg"}]
+         [:.carousel-caption [:h3 "Hungarian Parliament"
+                              [:h4 "At Night"]]]]]
+       [:.left.carousel-control {:href "#carousel-example-generic" :role "button"
+                                 :data-slide "prev"}
+        [:span.glyphicon.glyphicon-chevron-left {:aria-hidden "true"}]
+        [:span.sr-only "Previous"]]
+       [:.right.carousel-control {:href "#carousel-example-generic" :role "button"
+                                  :data-slide "next"}
+        [:span.glyphicon.glyphicon-chevron-right {:aria-hidden "true"}]
+        [:span.sr-only "Next"]]])))
 
 (defn dropdown-btn [btn-title & menuitem-pairs]
   [:span
@@ -131,7 +162,11 @@
       (let [events (:events (om/get-shared owner))]
         (html
          [:.panel.panel-default
-          [:.panel-heading [:.panel-title [:a {:data-toggle "collapse" :href (str "#collapse6" eid)} (db/g db :comment/owner eid)]]]
+          [:.panel-heading
+           [:.panel-title
+            [:img {:src (str "http://gravatar.com/avatar/" (md5/md5 (db/g db :comment/email eid)))}]
+            [:a {:data-toggle "collapse" :href (str "#collapse6" eid)}
+             (db/g db :comment/owner eid)]]]
           [:.panel-body.panel-collapse.collapse.in {:id (str "collapse6" eid)}
            (db/g db :widget/content eid)]])))))
 
