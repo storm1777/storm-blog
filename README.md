@@ -1,6 +1,7 @@
 # storm-blog
 
-FIXME: Write a one-line description of your library/project.
+
+An example blog built on Clojurescript's om and Datascript
 
 ## Overview
 
@@ -34,6 +35,6 @@ get live reloading, nor a REPL.
 
 ## License
 
-Copyright © 2014 FIXME
+Copyright © 2015 Stormnmos
 
 Distributed under the Eclipse Public License either version 1.0 or (at your option) any later version.
