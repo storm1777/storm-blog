@@ -6,8 +6,19 @@ An example blog built on Clojurescript's om and Datascript
 ## Overview
 
 FIXME: Write a paragraph about the library/project and highlight its goals.
+This is an example of an om and datascript project, using a datascript db as the OM application data root.
+When changes are made to the db, om reacts and rebuilds the components. This allows for components to interact
+solely with the database, and not with eachother, simplifying the construction of complex components that share data
+with each other.
+
+Additionally, it is planned to connect the in-browser datascript db to a server side datomic db, allowing server pushes
+to the browser to automatically refresh.
+
 
 ## Setup
+
+Content for the blog is held in edn files in the resources/edn directory.
+
 
 To get an interactive development environment run:
 
