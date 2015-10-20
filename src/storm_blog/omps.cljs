@@ -116,26 +116,26 @@
        :show-dropdown false})
     om/IRenderState
     (render-state [this state]
-        (html
-         (if (not (:show-dropdown state))
-           [:p {:on-click #(om/set-state! owner :show-dropdown true)
-                :on-mouse-leave #(om/set-state! owner :show-dropdown false)}
-            (db/g db :widget/content eid)]
-           (let [events (:events (om/get-shared owner))]
-             [:.input-group {:on-mouse-enter #(om/set-state! owner :show-dropdown true)
-                             :on-mouse-leave #(om/set-state! owner :show-dropdown false)}
-              [:.input-group-addon.btn.btn-default {:onClick #(a/add-par db eid events)} "+"]
-              [:.input-group-addon.btn.btn-default {:onClick #(a/retract db eid events)} "-"]
-              [:textarea.form-control {:rows 4
-                                       :value (db/g db :widget/content eid)
-                                       :onChange #(let [new-value (-> % .-target .-value)]
-                                                    (go (>! events [(db/par-template eid new-value)])))}]
-              (when (:show-dropdown state)
-                [:p [:.input-group-addon.btn.btn-default {:onClick #(a/retract db eid events)} "-"]
-                [:.input-group-addon.btn.btn-default
-                 (dropdown-btn "Par"
-                                 ["par" {:onClick #(a/->par db eid events)}]
-                                 ["Section" {:onClick #(a/->section db eid events)}])]])]))))))
+      (html
+       (if (not (:show-dropdown state))
+         [:p {:on-click #(om/set-state! owner :show-dropdown true)
+              :on-mouse-leave #(om/set-state! owner :show-dropdown false)}
+          (db/g db :widget/content eid)]
+         (let [events (:events (om/get-shared owner))]
+           [:.input-group {:on-mouse-enter #(om/set-state! owner :show-dropdown true)
+                           :on-mouse-leave #(om/set-state! owner :show-dropdown false)}
+            [:.input-group-addon.btn.btn-default {:onClick #(a/add-par db eid events)} "+"]
+            [:.input-group-addon.btn.btn-default {:onClick #(a/retract db eid events)} "-"]
+            [:textarea.form-control {:rows 4
+                                     :value (db/g db :widget/content eid)
+                                     :onChange #(let [new-value (-> % .-target .-value)]
+                                                  (go (>! events [(db/par-template eid new-value)])))}]
+            (when (:show-dropdown state)
+              [:p [:.input-group-addon.btn.btn-default {:onClick #(a/retract db eid events)} "-"]
+               [:.input-group-addon.btn.btn-default
+                (dropdown-btn "Par"
+                              ["par" {:onClick #(a/->par db eid events)}]
+                              ["Section" {:onClick #(a/->section db eid events)}])]])]))))))
 
 (defmethod widgets :header [[eid db] owner]
   (reify
@@ -179,43 +179,59 @@
       (let [events (:events (om/get-shared owner))]
         (html
          [:.page
-         [:.row
-          [:.col-md-1]
-          [:.col-md-2
-           [:.panel.panel-default
-            [:.panel-heading [:.panel-title [:a {:data-toggle "collapse" :href "#collapse1"} "Locations"]]]
-            [:ul#collapse1.list-group.panel-collapse.collapse.in
-             (map (fn [[loc n]] [:li.list-group-item [:a loc] [:span.badge n]])
-                  (d/q '[:find ?v (count ?e)
-                         :where [?e :article/country ?v]] db))]]
-           [:.panel.panel-default
-            [:.panel-heading [:.panel-title [:a {:data-toggle "collapse" :href "#collapse2"} "Categories"]]]
-            [:ul#collapse2.list-group.panel-collapse.collapse.in
-             (map (fn [[loc n]] [:li.list-group-item [:a loc] [:span.badge n]])
-                  (d/q '[:find ?v (count ?e)
-                         :where [?e :article/category ?v]] db))]]
-           [:.panel.panel-default
-            [:.panel-heading [:.panel-title [:a {:data-toggle "collapse" :href "#collapse3"} "Archive"]]]
-            [:ul#collapse3.list-group.panel-collapse.collapse.in
-             (map (fn [[loc n]] [:li.list-group-item [:a loc] [:span.badge n]])
-                  (d/q '[:find ?v (count ?e)
-                         :where [?e :article/date ?v]] db))]]]
-          [:.col-md-5
-           [:.panel.panel-default
-            [:.panel-heading
-             [:.panel-title
-              [:a {:data-toggle "collapse" :href "#collapse4"} "Plitvice Lakes"]]]
-            [:ul#collapse4.list-group.panel-collapse.collapse.in
-             [:li.list-group-item
-              (carousel)
-              (om/build-all widgets (sort-by first (map conj (db/eav db :widget/owner eid) (repeat db))))]
-             [:li.list-group-item (om/build-all widgets [[2 db] [3 db]])]
-             [:li.list-group-item (om/build-all widgets [[25 db]])]]]]
-          [:.col-md-3
-           [:.panel.panel-default
-            [:.panel-heading [:.panel-title [:a {:data-toggle "collapse" :href "#collapse5"} "About Us"]]]
-            [:ul#collapse5.list-group.panel-collapse.collapse.in
-             [:p (map (partial str "blab blah") (range 100))]]]]]])))))
+          [:.row
+           [:.col-md-1]
+           [:.col-md-2
+            [:.panel.panel-default
+             [:.panel-heading 
+              [:.panel-title 
+               [:a {:data-toggle "collapse" :href "#collapse1"} "Locations"]]]
+             [:ul#collapse1.list-group.panel-collapse.collapse.in
+              (map (fn [[loc eid n]] 
+                     [:li.list-group-item 
+                      [:a {:href (str "#/location/" eid)} loc] 
+                      [:span.badge n]])
+                   (d/q '[:find ?v ?e (count ?e)
+                          :where [?e :article/country ?v]] db))]]
+            [:.panel.panel-default
+             [:.panel-heading 
+              [:.panel-title [:a {:data-toggle "collapse" :href "#collapse2"} "Categories"]]]
+             [:ul#collapse2.list-group.panel-collapse.collapse.in
+              (map (fn [[cat eid n]] 
+                     [:li.list-group-item 
+                      [:a {:href (str "#/category/" eid)} cat]
+                      [:span.badge n]])
+                   (d/q '[:find ?v ?e (count ?e)
+                          :where [?e :article/category ?v]] db))]]
+            [:.panel.panel-default
+             [:.panel-heading 
+              [:.panel-title 
+               [:a {:data-toggle "collapse" :href "#collapse3"} "Archive"]]]
+             [:ul#collapse3.list-group.panel-collapse.collapse.in
+              (map (fn [[date eid n]] 
+                     [:li.list-group-item 
+                      [:a {:href (str "#/archive/" eid)} date] 
+                      [:span.badge n]])
+                   (d/q '[:find ?v ?e (count ?e)
+                          :where [?e :article/date ?v]] db))]]]
+           [:.col-md-5
+            [:.panel.panel-default
+             [:.panel-heading
+              [:.panel-title
+               [:a {:data-toggle "collapse" :href "#collapse4"} "Plitvice Lakes"]]]
+             [:ul#collapse4.list-group.panel-collapse.collapse.in
+              [:li.list-group-item
+               (carousel)
+               (om/build-all 
+                widgets (sort-by first (map conj (db/eav db :widget/owner eid) (repeat db))))]
+              [:li.list-group-item (om/build-all widgets [[2 db] [3 db]])]
+              [:li.list-group-item (om/build-all widgets [[25 db]])]]]]
+           [:.col-md-3
+            [:.panel.panel-default
+             [:.panel-heading 
+              [:.panel-title [:a {:data-toggle "collapse" :href "#collapse5"} "About Us"]]]
+             [:ul#collapse5.list-group.panel-collapse.collapse.in
+              [:p (map (partial str "blab blah") (range 100))]]]]]])))))
 
 (defmethod widgets :default [[eid db] owner]
   (reify
@@ -231,5 +247,5 @@
       (html
        (let [db @conn]
          [:div
-          (om/build-all widgets [[8 db] [1 db] #_ #_ [6 db] [2 db]])
+          (om/build-all widgets [[8 db] [(db/get-att db :ui/article) db] #_ #_ [6 db] [2 db]])
           #_ (om/build-all widgets [[2 db] [3 db]])])))))

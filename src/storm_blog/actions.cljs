@@ -4,6 +4,8 @@
    [cljs.core.async :as async :refer [<! >! put! take!]])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
+(defn transact! [events & data]
+  (go (>! events data #_ [{:db/id 11 :widget/content "Test content"}])))
 
 (defn add-par [_ eid events]
   (go (>! events [{:db/id -1 :widget/type :par

@@ -47,4 +47,8 @@
    :widget/order 15
    :widget/content content})
 
-
+(defn get-att [db att]
+  (ffirst (d/q '[:find ?v
+                 :in $ ?a
+                 :where [_ ?a ?v]]
+               db att)))

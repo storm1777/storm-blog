@@ -13,10 +13,6 @@
        (.timeEnd js/console k#)
        res#)))
 
-
-(go (>! c 4))
-
-
 (def echo-chan (chan))
 (go
  (let [msg (<! echo-chan)]
@@ -44,7 +40,6 @@
 
 ((juxt conj) #{[3] [4]} 4)
 
-
 (def schema {:article/title    {}
              :article/content  {:db.cardinality :db.cardinality/many}
              :article/category {}
@@ -69,23 +64,31 @@
 (def conn (d/create-conn schema))
 (d/transact! conn fixtures)
 
-
 (d/pull @conn [:article/title :article/content] 1)
 
+(d/q '[:find  ?e
+       :where [?e :aka "Maks Otto von Stirlitz"]]@conn)
 
-(d/q '[ :find  ?e
-          :where [?e :aka "Maks Otto von Stirlitz"]]@conn)
 (d/pull @conn [:age] (ffirst (d/q '[ :find  ?e
           :where [?e :aka "Maks Otto von Stirlitz"]]@conn)))
 
 (def a (let [schema {:aka {:db/cardinality :db.cardinality/many}}
-      conn   (d/create-conn schema)]
-  (d/transact! conn [ { :db/id -1
-                        :name  "Maksim"
-                        :age   45
-                        :aka   ["Maks Otto von Stirlitz", "Jack Ryan"] } ])
-  (d/q '[ :find  ?n ?a
-          :where [?e :aka "Maks Otto von Stirlitz"]
-                 [?e :name ?n]
-                 [?e :age  ?a] ]
-       @conn))))
+             conn   (d/create-conn schema)]
+         (d/transact! conn [ {:db/id -1
+                              :name  "Maksim"
+                              :age   45
+                              :aka   ["Maks Otto von Stirlitz", "Jack Ryan"] } ])
+         (d/q '[:find  ?n ?a
+                :where [?e :aka "Maks Otto von Stirlitz"]
+                [?e :name ?n]
+                [?e :age  ?a] ]
+              @conn))))
+
+
+
+
+
+
+
+
+   
