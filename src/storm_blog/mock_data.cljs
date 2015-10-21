@@ -42,7 +42,7 @@
     :widget/type :article
     :article/title "Article 2"
     :widget/content "Article Content"
-    :article/country "Ireland"
+    :article/country #_ "Ireland" "Croatia"
     :article/category "Location Feature"
     :article/date "October 15th, 2015"
     :article/list ["1" "2" "3" "4"]
@@ -151,7 +151,7 @@
     :widget/type :article-creator}
    {:db/id -27
     :widget/type :img
-    :widget/owner 1
+    :widget/owner -1
     :widget/order 16
     :widget/content "image source"}
    {:db/id 0
@@ -174,4 +174,19 @@
     :widget/type :par
     :widget/owner -6 
     :widget/order 3
-    :widget/content "Curabitur elementum justo nec ante tristique, ac dapibus dolor euismod. Donec lacus massa, feugiat nec cursus ac, ultrices id diam. Etiam pretium ipsum auctor nulla sagittis, nec ultricies diam porttitor. Morbi molestie nisl dolor, id vestibulum felis lacinia nec. Vivamus fermentum ornare neque, vel convallis mi efficitur id. Nunc ultricies auctor aliquet. Donec vel nisl vel erat fermentum sagittis sit amet et lectus. Etiam ut orci vel lorem eleifend ullamcorper ac sit amet diam. Quisque commodo at quam sed feugiat. Fusce euismod eros ipsum, vitae posuere mauris iaculis non. Morbi condimentum neque a metus ultricies, eu tristique dolor convallis. Fusce vel porta sem, vel viverra mi."}])
+    :widget/content "Curabitur elementum justo nec ante tristique, ac dapibus dolor euismod. Donec lacus massa, feugiat nec cursus ac, ultrices id diam. Etiam pretium ipsum auctor nulla sagittis, nec ultricies diam porttitor. Morbi molestie nisl dolor, id vestibulum felis lacinia nec. Vivamus fermentum ornare neque, vel convallis mi efficitur id. Nunc ultricies auctor aliquet. Donec vel nisl vel erat fermentum sagittis sit amet et lectus. Etiam ut orci vel lorem eleifend ullamcorper ac sit amet diam. Quisque commodo at quam sed feugiat. Fusce euismod eros ipsum, vitae posuere mauris iaculis non. Morbi condimentum neque a metus ultricies, eu tristique dolor convallis. Fusce vel porta sem, vel viverra mi."}
+   {:db/id -32
+    :widget/type :img
+    :widget/owner -1
+    :img/src "/img/parliament0.jpg"
+    :img/caption "Parliament Caption"}
+   {:db/id -33
+    :widget/type :img
+    :widget/owner -1
+    :img/src "/img/banner-background.jpg"
+    :img/caption "banner caption"}
+   {:db/id -34
+    :widget/type :img
+    :widget/owner -1
+    :img/src "/img/parliament1.jpg"
+    :img/caption "Parliament 1 picture"}])

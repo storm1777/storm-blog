@@ -16,62 +16,30 @@
   (fn [[eid db] _]
      (db/g db :widget/type eid)))
 
-(defn carousel []
-  [:.carousel.slide {:data-ride "carousel" :id "carousel-example-generic"
+(defn carousel-item [[eid db] & [{active :active :or {active false}}]]
+  [(if active :.item.active :.item)   
+   [:img {:src (db/vea db eid :img/src)}]
+   [:.carousel-caption [:h3 (db/vea db eid :img/caption)]]])
+
+(defn carousel [[eid db]]
+  [:.carousel.slide {:data-ride "carousel" :id "car"
                      :data-interval "false"}
    [:ol.carousel-indicators
-    [:li.active {:data-target "#carousel-example-generic" :data-slide-to "0"}]
-    [:li        {:data-target "#carousel-example-generic" :data-slide-to "1"}]
-    [:li        {:data-target "#carousel-example-generic" :data-slide-to "2"}]]
+    [:li.active {:data-target "#car" :data-slide-to "0"}]
+    [:li        {:data-target "#car" :data-slide-to "1"}]
+    [:li        {:data-target "#car" :data-slide-to "2"}]]
    [:.carousel-inner {:role "listbox"}
-    [:.item.active
-     [:img {:src "/img/parliament1.jpg"}]
-     [:.carousel-caption [:h3 "Hungarian Parliament"]]]
-    [:.item
-     [:img {:src "/img/banner-background.jpg"}]
-     [:.carousel-caption [:h4 "Plitice National Lakes"]]]
-    [:.item
-     [:img {:src "/img/parliament0.jpg"}]
-     [:.carousel-caption [:h3 "Hungarian Parliament"
-                          [:h4 "At Night"]]]]]
-   [:.left.carousel-control {:href "#carousel-example-generic" :role "button"
+    (carousel-item [32 db] {:active true})
+    (carousel-item [32 db])
+    (carousel-item [32 db])]
+   [:.left.carousel-control {:href "#car" :role "button"
                              :data-slide "prev"}
     [:span.glyphicon.glyphicon-chevron-left {:aria-hidden "true"}]
     [:span.sr-only "Previous"]]
-   [:.right.carousel-control {:href "#carousel-example-generic" :role "button"
+   [:.right.carousel-control {:href "#car" :role "button"
                              :data-slide "next"}
     [:span.glyphicon.glyphicon-chevron-right {:aria-hidden "true"}]
     [:span.sr-only "Next"]]])
-
-(defmethod widgets :carousel [[eid db] owner]
-  (reify
-    om/IRender
-    (render [_]
-      [:.carousel.slide {:data-ride "carousel" :id "carousel-example-generic"
-                         :data-interval "false"}
-       [:ol.carousel-indicators
-        [:li.active {:data-target "#carousel-example-generic" :data-slide-to "0"}]
-        [:li        {:data-target "#carousel-example-generic" :data-slide-to "1"}]
-        [:li        {:data-target "#carousel-example-generic" :data-slide-to "2"}]]
-       [:.carousel-inner {:role "listbox"}
-        [:.item.active
-         [:img {:src "/img/parliament1.jpg"}]
-         [:.carousel-caption [:h3 "Hungarian Parliament"]]]
-        [:.item
-         [:img {:src "/img/banner-background.jpg"}]
-         [:.carousel-caption [:h4 "Plitice National Lakes"]]]
-        [:.item
-         [:img {:src "/img/parliament0.jpg"}]
-         [:.carousel-caption [:h3 "Hungarian Parliament"
-                              [:h4 "At Night"]]]]]
-       [:.left.carousel-control {:href "#carousel-example-generic" :role "button"
-                                 :data-slide "prev"}
-        [:span.glyphicon.glyphicon-chevron-left {:aria-hidden "true"}]
-        [:span.sr-only "Previous"]]
-       [:.right.carousel-control {:href "#carousel-example-generic" :role "button"
-                                  :data-slide "next"}
-        [:span.glyphicon.glyphicon-chevron-right {:aria-hidden "true"}]
-        [:span.sr-only "Next"]]])))
 
 (defn dropdown-btn [btn-title & menuitem-pairs]
   [:span
@@ -149,10 +117,10 @@
                                   :data-target ".navbar-collapse"}
            [:span.sr-only "Toggle Navigation"]
            (map (fn [] [:span.icon-bar]) (range 3))]
-          [:a.navbar-brand {:href "/"} "Storm Blog"]]
+          [:a.navbar-brand {:href "#/article/1"} "Storm Blog"]]
          [:nav.collapse.navbar-collapse {:role "navigation"}
           [:ul.nav.navbar-nav
-           (map (fn [title] [:li [:a {:href "#"} title]])
+           (map (fn [title] [:li [:a {:href "#/article/1"} title]])
                 ["Get Started" "Edit" "Visualize" "Prototype"])]]]]))))
 
 (defmethod widgets :comment [[eid db] owner]
@@ -170,7 +138,22 @@
           [:.panel-body.panel-collapse.collapse.in {:id (str "collapse6" eid)}
            (db/g db :widget/content eid)]])))))
 
-
+(defn facet [db {:keys [type att title]}]
+  (let [ref (str "collapse-" type)]
+    [:.panel.panel-default
+     [:.panel-heading
+      [:.panel-title
+       [:a {:data-toggle "collapse" :href (str "#" ref)} title]]]
+     [:ul.list-group.panel-collapse.collapse.in
+      {:id (keyword ref)}
+      (map (fn [[x eid n]]
+             [:li.list-group-item
+              [:a {:href (str "#/" type "/" eid)} x]
+              [:span.badge n]])
+           (d/q '[:find ?v ?e (count ?e) 
+                  :in $ ?a
+                  :where [?e ?a ?v]]
+                db att))]]))
 
 (defmethod widgets :article [[eid db] owner]
   (reify
@@ -182,38 +165,9 @@
           [:.row
            [:.col-md-1]
            [:.col-md-2
-            [:.panel.panel-default
-             [:.panel-heading 
-              [:.panel-title 
-               [:a {:data-toggle "collapse" :href "#collapse1"} "Locations"]]]
-             [:ul#collapse1.list-group.panel-collapse.collapse.in
-              (map (fn [[loc eid n]] 
-                     [:li.list-group-item 
-                      [:a {:href (str "#/location/" eid)} loc] 
-                      [:span.badge n]])
-                   (d/q '[:find ?v ?e (count ?e)
-                          :where [?e :article/country ?v]] db))]]
-            [:.panel.panel-default
-             [:.panel-heading 
-              [:.panel-title [:a {:data-toggle "collapse" :href "#collapse2"} "Categories"]]]
-             [:ul#collapse2.list-group.panel-collapse.collapse.in
-              (map (fn [[cat eid n]] 
-                     [:li.list-group-item 
-                      [:a {:href (str "#/category/" eid)} cat]
-                      [:span.badge n]])
-                   (d/q '[:find ?v ?e (count ?e)
-                          :where [?e :article/category ?v]] db))]]
-            [:.panel.panel-default
-             [:.panel-heading 
-              [:.panel-title 
-               [:a {:data-toggle "collapse" :href "#collapse3"} "Archive"]]]
-             [:ul#collapse3.list-group.panel-collapse.collapse.in
-              (map (fn [[date eid n]] 
-                     [:li.list-group-item 
-                      [:a {:href (str "#/archive/" eid)} date] 
-                      [:span.badge n]])
-                   (d/q '[:find ?v ?e (count ?e)
-                          :where [?e :article/date ?v]] db))]]]
+            (facet db {:type "location" :att :article/country :title "Locations"})
+            (facet db {:type "category" :att :article/category :title "Categories"})
+            (facet db {:type "archive" :att :article/date :title "Archive"})]
            [:.col-md-5
             [:.panel.panel-default
              [:.panel-heading
@@ -221,7 +175,7 @@
                [:a {:data-toggle "collapse" :href "#collapse4"} "Plitvice Lakes"]]]
              [:ul#collapse4.list-group.panel-collapse.collapse.in
               [:li.list-group-item
-               (carousel)
+               (carousel [eid db])
                (om/build-all 
                 widgets (sort-by first (map conj (db/eav db :widget/owner eid) (repeat db))))]
               [:li.list-group-item (om/build-all widgets [[2 db] [3 db]])]
@@ -247,5 +201,8 @@
       (html
        (let [db @conn]
          [:div
-          (om/build-all widgets [[8 db] [(db/get-att db :ui/article) db] #_ #_ [6 db] [2 db]])
-          #_ (om/build-all widgets [[2 db] [3 db]])])))))
+          (om/build-all 
+           widgets [[8 db] 
+                    [(db/get-att 
+                      db :ui/article)
+                     db]])])))))

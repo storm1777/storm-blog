@@ -5,6 +5,7 @@
             [storm-blog.omps :as c]
             [storm-blog.db :as db]
             [storm-blog.md5 :as md5]
+            [sablono.core :as html :refer-macros [html]]
             [cljs.core.async :as async :refer [<! >! put! take!]]
             [datascript.core :as d]
             [goog.events :as events]
@@ -22,6 +23,9 @@
 
 (defroute users "/users/:eid" [eid]
   (a/transact! events {:db/eid eid :article/title "users"}))
+
+(defroute article "/article/:eid" [eid]
+  (a/transact! events {:db/id 0 :ui/article {:db/id (js/parseInt eid)}}))
 
 (defroute location "/location/:eid" [eid]
   (a/transact! events {:db/id 0 :ui/article {:db/id (js/parseInt eid)}}))

@@ -19,7 +19,7 @@
          :where [?e ?a ?v]] db eid att))
 
 (defn vea [db eid att]
-  (d/q '[:find ?v
+  (d/q '[:find ?v .
          :in $ ?e ?a
          :where [?e ?a ?v]]
        db eid att))
@@ -48,7 +48,7 @@
    :widget/content content})
 
 (defn get-att [db att]
-  (ffirst (d/q '[:find ?v
-                 :in $ ?a
-                 :where [_ ?a ?v]]
-               db att)))
+  (d/q '[:find ?v .
+         :in $ ?a
+         :where [_ ?a ?v]]
+       db att))
