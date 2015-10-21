@@ -154,7 +154,7 @@
                   :in $ ?a
                   :where [?e ?a ?v]]
                 db att))]]))
-
+ 
 (defmethod widgets :article [[eid db] owner]
   (reify
     om/IRender

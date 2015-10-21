@@ -42,7 +42,7 @@
     :widget/type :article
     :article/title "Article 2"
     :widget/content "Article Content"
-    :article/country #_ "Ireland" "Croatia"
+    :article/country "Ireland"
     :article/category "Location Feature"
     :article/date "October 15th, 2015"
     :article/list ["1" "2" "3" "4"]
