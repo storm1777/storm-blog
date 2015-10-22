@@ -189,4 +189,16 @@
     :widget/type :img
     :widget/owner -1
     :img/src "/img/parliament1.jpg"
-    :img/caption "Parliament 1 picture"}])
+    :img/caption "Parliament 1 picture"}
+   {:db/id -35
+    :widget/type :facet
+    :facet/att :article/country
+    :facet/title "Locations"}
+   {:db/id -36
+    :widget/type :facet
+    :facet/att :article/category
+    :facet/title "Category"}
+   {:db/id -37
+    :widget/type :facet
+    :facet/att :article/date
+    :facet/title "Archive"}])

@@ -20,7 +20,7 @@
   [(if active :.item.active :.item)   
    [:img {:src (db/vea db eid :img/src)}]
    [:.carousel-caption [:h3 (db/vea db eid :img/caption)]]])
-
+                                                                                                                         
 (defn carousel [[eid db]]
   [:.carousel.slide {:data-ride "carousel" :id "car"
                      :data-interval "false"}
@@ -154,7 +154,68 @@
                   :in $ ?a
                   :where [?e ?a ?v]]
                 db att))]]))
+
+(defmethod widgets :facet [[eid db] owner]
+  (reify
+    om/IRender
+    (render [this]
+      (let [ref (str "collapse-" "type")
+            {title :facet/title att :facet/att} (d/pull db [:facet/title :facet/att] eid)]
+        (html
+         [:.panel.panel-default
+          [:.panel-heading
+           [:.panel-title
+            [:a {:data-toggle "collapse" :href (str "#" ref)} title]]]
+          [:ul.list-group.panel-collapse.collapse.in
+           {:id (keyword ref)}
+           (map (fn [[x eid n]]
+                  [:li.list-group-item
+                   [:a {:href (str "#/" "type" "/" eid)} x]
+                   [:span.badge n]])
+                (d/q '[:find ?v ?e (count ?e)
+                       :in $ ?a
+                       :where [?e ?a ?v]]
+                     db att))]])))))
  
+(defmethod widgets :page [[eid db] owner]
+  (reify
+    om/IRender
+    (render [this]
+      (let [events (:events (om/get-shared owner))
+            facets [[35 db] [36 db] [37 db]]
+            articles [[1 db] [6 db]]
+            about-us [10 db]]
+        (html
+         [:page
+          [:.row
+           [:.col-md-1]
+           [:.col-md-2
+            (om/build-all widgets facets)]
+           [:.col-md-5
+            (om/build-all widgets articles)]
+           [:col-md-3
+            (om/build widgets about-us)]]])))))
+
+(defmethod widgets :art [[eid db] owner]
+  (reify
+    om/IRender
+    (render [this]
+      (let [events (:events (om/get-shared owner))
+            content (sort-by first (map conj (db/eav db :widget/owner eid) (repeat db)))
+            comments [[2 db] [3 db]]
+            comment-form [[25 db]]]
+        (html
+         [:.panel.panel-default
+          [:.panel-heading
+           [:.panel-title
+            [:a {:data-toggle "collapse" :href "#collapse4"} "Plitvice Lakes"]]]
+          [:ul#collapse4.list-group.panel-collapse.collapse.in
+           [:li.list-group-item
+            (carousel [eid db])
+            (om/build-all widgets content)]
+           [:li.list-group-item (om/build-all widgets comments)]
+           [:li.list-group-item (om/build-all widgets comment-form)]]])))))
+
 (defmethod widgets :article [[eid db] owner]
   (reify
     om/IRender
@@ -165,9 +226,7 @@
           [:.row
            [:.col-md-1]
            [:.col-md-2
-            (facet db {:type "location" :att :article/country :title "Locations"})
-            (facet db {:type "category" :att :article/category :title "Categories"})
-            (facet db {:type "archive" :att :article/date :title "Archive"})]
+            (om/build-all widgets [[35 db] [36 db] [37 db]])]
            [:.col-md-5
             [:.panel.panel-default
              [:.panel-heading
@@ -198,11 +257,10 @@
   (reify
     om/IRender
     (render [_]
-      (html
-       (let [db @conn]
+      (let [db @conn
+            header [8 db]
+            article [(db/get-att db :ui/article) db]]
+        (html
          [:div
           (om/build-all 
-           widgets [[8 db] 
-                    [(db/get-att 
-                      db :ui/article)
-                     db]])])))))
+           widgets [header article])])))))
