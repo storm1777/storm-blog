@@ -33,6 +33,19 @@
 (defn g [db att eid]
   (att (d/pull db [att] eid)))
 
+(defn gv [db atts eid]
+  (map (fn [att] (g db att eid)) atts))
+
+(defn children [db eid]
+  (map conj (eav db :widget/owner eid) (repeat db)))
+
+(defn get-widgets [db type]
+  (map conj (d/q '[:find ?e
+                   :in $ ?v
+                   :where [?e :widget/type ?v]]
+                 db type)
+       (repeat db))) 
+
 (defn section-template [eid content]
   {:db/id eid
    :widget/owner 1

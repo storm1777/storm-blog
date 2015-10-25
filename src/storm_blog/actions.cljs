@@ -1,11 +1,13 @@
 (ns storm-blog.actions
   (:require
    [storm-blog.db :as db]
-   [cljs.core.async :as async :refer [<! >! put! take!]])
+   [cljs.core.async :as async :refer [<! >! put! take!]]
+   [om.core :as om])
+  
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
 (defn transact! [events & data]
-  (go (>! events data #_ [{:db/id 11 :widget/content "Test content"}])))
+  (go (>! events data)))
 
 (defn add-par [_ eid events]
   (go (>! events [{:db/id -1 :widget/type :par
@@ -25,3 +27,11 @@
 
 (defn retract [_ eid events]
   (go (>! events [[:db.fn/retractEntity eid]])))
+
+(defn not-active [owner]
+  {:on-click       #(om/set-state! owner :show-dropdown true)
+   :on-mouse-leave #(om/set-state! owner :show-dropdown false)})
+
+(defn active [owner]
+  {:on-mouse-enter #(om/set-state! owner :show-dropdown true)
+   :on-mouse-leave #(om/set-state! owner :show-dropdown false)})

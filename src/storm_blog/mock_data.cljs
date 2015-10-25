@@ -193,12 +193,38 @@
    {:db/id -35
     :widget/type :facet
     :facet/att :article/country
+    :facet/type "location"
     :facet/title "Locations"}
    {:db/id -36
     :widget/type :facet
     :facet/att :article/category
+    :facet/type "category"
     :facet/title "Category"}
    {:db/id -37
     :widget/type :facet
     :facet/att :article/date
-    :facet/title "Archive"}])
+    :facet/type "archive"
+    :facet/title "Archive"}
+   {:db/id -38
+    :widget/type :carousel
+    :widget/owner -1}
+   {:db/id -39
+    :carousel-item/active true
+    :carousel-item/img "/img/img0.jpg"
+    :carousel-item/caption "Image 0"
+    :widget/type :carousel-item
+    :widget/owner -38}
+   {:db/id -40
+    :carousel-item/active false
+    :carousel-item/img "/img/img1.jpg"
+    :carousel-item/caption "Image 1"
+    :widget/type :carousel-item
+    :widget/owner -38}
+   {:db/id -41
+    :carousel-item/active false
+    :carousel-item/img "/img/img2.jpg"
+    :carousel-item/caption "Image 2"
+    :widget/type :carousel-item
+    :widget/owner -38}
+   {:db/id -42
+    :widget/type :page}])

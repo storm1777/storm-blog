@@ -46,7 +46,6 @@
   (go
     (while true
       (d/transact! conn (<! events))))
-  
   (let [history (History.)]
     (events/listen history "navigate"
                    (fn [event]

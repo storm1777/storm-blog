@@ -16,30 +16,42 @@
   (fn [[eid db] _]
      (db/g db :widget/type eid)))
 
-(defn carousel-item [[eid db] & [{active :active :or {active false}}]]
-  [(if active :.item.active :.item)   
-   [:img {:src (db/vea db eid :img/src)}]
-   [:.carousel-caption [:h3 (db/vea db eid :img/caption)]]])
+(def make (partial om/build-all widgets))
+
+(defmethod widgets :carousel-item [[eid db] owner]
+  (reify
+    om/IRender
+    (render [this]
+      (let [atts [:carousel-item/active
+                  :carousel-item/img
+                  :carousel-item/caption]
+            [active img caption] (db/gv db atts eid)]
+        (html
+         [(if active :.item.active :.item)
+          [:img {:src img}]
+          [:.carousel-caption caption]])))))
                                                                                                                          
-(defn carousel [[eid db]]
-  [:.carousel.slide {:data-ride "carousel" :id "car"
-                     :data-interval "false"}
-   [:ol.carousel-indicators
-    [:li.active {:data-target "#car" :data-slide-to "0"}]
-    [:li        {:data-target "#car" :data-slide-to "1"}]
-    [:li        {:data-target "#car" :data-slide-to "2"}]]
-   [:.carousel-inner {:role "listbox"}
-    (carousel-item [32 db] {:active true})
-    (carousel-item [32 db])
-    (carousel-item [32 db])]
-   [:.left.carousel-control {:href "#car" :role "button"
-                             :data-slide "prev"}
-    [:span.glyphicon.glyphicon-chevron-left {:aria-hidden "true"}]
-    [:span.sr-only "Previous"]]
-   [:.right.carousel-control {:href "#car" :role "button"
-                             :data-slide "next"}
-    [:span.glyphicon.glyphicon-chevron-right {:aria-hidden "true"}]
-    [:span.sr-only "Next"]]])
+(defmethod widgets :carousel [[eid db] owner]
+  (reify
+    om/IRender
+    (render [this]
+      (let [carousel-slides (db/children db eid)]
+        (html
+         [:.carousel.slide {:data-ride "carousel" :id "car"
+                            :data-interval "false"}
+          [:ol.carousel-indicators
+           (map (fn [n]
+                  [:li {:data-target "#car" :data-slide-to n}])
+                (range (count carousel-slides)))]
+          [:.carousel-inner {:role "listbox"} (make carousel-slides)]
+          [:.left.carousel-control {:href "#car" :role "button"
+                                    :data-slide "prev"}
+           [:span.glyphicon.glyphicon-chevron-right {:aria-hidden "true"}]
+           [:span.sr-only "Previous"]]
+          [:right.carousel-control {:href "#car" :role "button"
+                                    :data-slide "next"}
+           [:span.glyphicon.glyphicon-chevron-right {:aria-hidden "true"}]
+           [:span.sr-only "Next"]]])))))
 
 (defn dropdown-btn [btn-title & menuitem-pairs]
   [:span
@@ -51,6 +63,9 @@
     (map (fn [[title args]]
            [:li [:a args title]]) menuitem-pairs)]])
 
+(defn addon-button [f val]
+  [:.input-group-addon.btn.btn-default {:on-click f} val])
+
 (defmethod widgets :section [[eid db] owner]
   (reify
     om/IInitState
@@ -59,22 +74,20 @@
        :show-dropdown false})
     om/IRenderState
     (render-state [this state]
-      (html
-       (if (not (:show-dropdown state))
-         [:h3 {:on-click #(om/set-state! owner :show-dropdown true)
-               :on-mouse-leave #(om/set-state! owner :show-dropdown false)}
-          (db/g db :widget/content eid)]
-         (let [events (:events (om/get-shared owner))]
-           [:.input-group {:on-mouse-enter #(om/set-state! owner :show-dropdown true)
-                           :on-mouse-leave #(om/set-state! owner :show-dropdown false)}
-            [:.input-group-addon.btn.btn-default {:onClick #(a/add-par db eid events)} "+"]
-            [:.input-group-addon.btn.btn-default {:onClick #(a/retract db eid events)} "-"]
+      (let [events (:events (om/get-shared owner))
+            content (db/g db :widget/content eid)]
+        (html
+         (if (not (:show-dropdown state))
+           [:h3 (a/not-active owner) content]
+           [:.input-group (a/active owner)
+            (addon-button #(a/add-section db eid events) "+")
+            (addon-button #(a/retract db eid events) "-")
             [:input.form-control {:type "textarea" :rows 3
-                                  :value (db/g db :widget/content eid)
+                                  :value content
                                   :onChange #(let [new-value (-> % .-target .-value)]
-                                               (go (>! events [(db/section-template eid new-value)])))}]
+                                               (a/transact! events (db/section-template eid new-value)))}]
             (when (:show-dropdown state)
-                 [:.input-group-addon.btn.btn-default {:onClick #(a/retract db eid events)} "-"])]))))))
+              (addon-button #(a/retract db eid events) "-"))]))))))
 
 (defmethod widgets :par [[eid db] owner]
   (reify
@@ -84,22 +97,21 @@
        :show-dropdown false})
     om/IRenderState
     (render-state [this state]
-      (html
-       (if (not (:show-dropdown state))
-         [:p {:on-click #(om/set-state! owner :show-dropdown true)
-              :on-mouse-leave #(om/set-state! owner :show-dropdown false)}
-          (db/g db :widget/content eid)]
-         (let [events (:events (om/get-shared owner))]
-           [:.input-group {:on-mouse-enter #(om/set-state! owner :show-dropdown true)
-                           :on-mouse-leave #(om/set-state! owner :show-dropdown false)}
-            [:.input-group-addon.btn.btn-default {:onClick #(a/add-par db eid events)} "+"]
-            [:.input-group-addon.btn.btn-default {:onClick #(a/retract db eid events)} "-"]
+      (let [events (:events (om/get-shared owner))
+            content (db/g db :widget/content eid)]
+        (html
+         (if (not (:show-dropdown state))
+           [:p (a/not-active owner)
+            (db/g db :widget/content eid)]
+           [:.input-group (a/active owner)
+            (addon-button #(a/add-par db eid events) "+")
+            (addon-button #(a/retract db eid events) "-")
             [:textarea.form-control {:rows 4
                                      :value (db/g db :widget/content eid)
                                      :onChange #(let [new-value (-> % .-target .-value)]
-                                                  (go (>! events [(db/par-template eid new-value)])))}]
+                                                  (a/transact! events (db/par-template eid new-value)))}]
             (when (:show-dropdown state)
-              [:p [:.input-group-addon.btn.btn-default {:onClick #(a/retract db eid events)} "-"]
+              [:p (addon-button #(a/retract db eid events) "-")
                [:.input-group-addon.btn.btn-default
                 (dropdown-btn "Par"
                               ["par" {:onClick #(a/->par db eid events)}]
@@ -127,40 +139,22 @@
   (reify
     om/IRender
     (render [this]
-      (let [events (:events (om/get-shared owner))]
+      (let [events (:events (om/get-shared owner))
+            [email cowner content] (db/gv db [:comment/email :comment/owner :widget/content] eid)]
         (html
          [:.panel.panel-default
           [:.panel-heading
            [:.panel-title
-            [:img {:src (str "http://gravatar.com/avatar/" (md5/md5 (db/g db :comment/email eid)))}]
-            [:a {:data-toggle "collapse" :href (str "#collapse6" eid)}
-             (db/g db :comment/owner eid)]]]
-          [:.panel-body.panel-collapse.collapse.in {:id (str "collapse6" eid)}
-           (db/g db :widget/content eid)]])))))
-
-(defn facet [db {:keys [type att title]}]
-  (let [ref (str "collapse-" type)]
-    [:.panel.panel-default
-     [:.panel-heading
-      [:.panel-title
-       [:a {:data-toggle "collapse" :href (str "#" ref)} title]]]
-     [:ul.list-group.panel-collapse.collapse.in
-      {:id (keyword ref)}
-      (map (fn [[x eid n]]
-             [:li.list-group-item
-              [:a {:href (str "#/" type "/" eid)} x]
-              [:span.badge n]])
-           (d/q '[:find ?v ?e (count ?e) 
-                  :in $ ?a
-                  :where [?e ?a ?v]]
-                db att))]]))
+            [:img {:src (str "http://gravatar.com/avatar/" (md5/md5 email))}]
+            [:a {:data-toggle "collapse" :href (str "#collapse6" eid)} cowner]]]
+          [:.panel-body.panel-collapse.collapse.in {:id (str "collapse6" eid)} content]])))))
 
 (defmethod widgets :facet [[eid db] owner]
   (reify
     om/IRender
     (render [this]
       (let [ref (str "collapse-" "type")
-            {title :facet/title att :facet/att} (d/pull db [:facet/title :facet/att] eid)]
+            [title att type] (db/gv db [:facet/title :facet/att :facet/type] eid)]
         (html
          [:.panel.panel-default
           [:.panel-heading
@@ -170,7 +164,7 @@
            {:id (keyword ref)}
            (map (fn [[x eid n]]
                   [:li.list-group-item
-                   [:a {:href (str "#/" "type" "/" eid)} x]
+                   [:a {:href (str "#/" type "/" eid)} x]
                    [:span.badge n]])
                 (d/q '[:find ?v ?e (count ?e)
                        :in $ ?a
@@ -182,69 +176,34 @@
     om/IRender
     (render [this]
       (let [events (:events (om/get-shared owner))
-            facets [[35 db] [36 db] [37 db]]
-            articles [[1 db] [6 db]]
-            about-us [10 db]]
+            facets (db/get-widgets db :facet)
+            articles (db/get-widgets db :article)
+            about-us [[10 db]]]
         (html
          [:page
           [:.row
            [:.col-md-1]
-           [:.col-md-2
-            (om/build-all widgets facets)]
-           [:.col-md-5
-            (om/build-all widgets articles)]
-           [:col-md-3
-            (om/build widgets about-us)]]])))))
+           [:.col-md-2 (make facets)]
+           [:.col-md-5 (make articles)]
+           [:.col-md-3 (make about-us)]]])))))
 
-(defmethod widgets :art [[eid db] owner]
+(defmethod widgets :article [[eid db] owner]
   (reify
     om/IRender
     (render [this]
       (let [events (:events (om/get-shared owner))
-            content (sort-by first (map conj (db/eav db :widget/owner eid) (repeat db)))
-            comments [[2 db] [3 db]]
-            comment-form [[25 db]]]
+            content (sort-by first (db/children db eid))
+            comments (db/get-widgets db :comment)
+            comment-form (db/get-widgets db :comment-form)]
         (html
          [:.panel.panel-default
           [:.panel-heading
            [:.panel-title
             [:a {:data-toggle "collapse" :href "#collapse4"} "Plitvice Lakes"]]]
           [:ul#collapse4.list-group.panel-collapse.collapse.in
-           [:li.list-group-item
-            (carousel [eid db])
-            (om/build-all widgets content)]
-           [:li.list-group-item (om/build-all widgets comments)]
-           [:li.list-group-item (om/build-all widgets comment-form)]]])))))
-
-(defmethod widgets :article [[eid db] owner]
-  (reify
-    om/IRender
-    (render [this]
-      (let [events (:events (om/get-shared owner))]
-        (html
-         [:.page
-          [:.row
-           [:.col-md-1]
-           [:.col-md-2
-            (om/build-all widgets [[35 db] [36 db] [37 db]])]
-           [:.col-md-5
-            [:.panel.panel-default
-             [:.panel-heading
-              [:.panel-title
-               [:a {:data-toggle "collapse" :href "#collapse4"} "Plitvice Lakes"]]]
-             [:ul#collapse4.list-group.panel-collapse.collapse.in
-              [:li.list-group-item
-               (carousel [eid db])
-               (om/build-all 
-                widgets (sort-by first (map conj (db/eav db :widget/owner eid) (repeat db))))]
-              [:li.list-group-item (om/build-all widgets [[2 db] [3 db]])]
-              [:li.list-group-item (om/build-all widgets [[25 db]])]]]]
-           [:.col-md-3
-            [:.panel.panel-default
-             [:.panel-heading 
-              [:.panel-title [:a {:data-toggle "collapse" :href "#collapse5"} "About Us"]]]
-             [:ul#collapse5.list-group.panel-collapse.collapse.in
-              [:p (map (partial str "blab blah") (range 100))]]]]]])))))
+           (map (fn [els] 
+                   [:li.list-group-item (make els)])
+                 [content comments comment-form])]])))))
 
 (defmethod widgets :default [[eid db] owner]
   (reify
@@ -259,8 +218,7 @@
     (render [_]
       (let [db @conn
             header [8 db]
-            article [(db/get-att db :ui/article) db]]
+            article [(db/get-att db :ui/article) db]
+            page [42 db]]
         (html
-         [:div
-          (om/build-all 
-           widgets [header article])])))))
+         [:div (make [header #_ article page])])))))
