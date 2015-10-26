@@ -9,13 +9,17 @@
 (defn transact! [events & data]
   (go (>! events data)))
 
-(defn add-par [_ eid events]
+(defn add-par [_ eid events owner order]
   (go (>! events [{:db/id -1 :widget/type :par
-                   :widget/content "New Paragraph" :widget/owner 1}])))
+                   :widget/content "New Paragraph" 
+                   :widget/owner owner
+                   :widget/order order}])))
 
-(defn add-section [_ eid events]
+(defn add-section [_ eid events owner order]
   (go (>! events [{:db/id -1 :widget/type :section
-                   :widget/content "New Section" :widget/owner 1}])))
+                   :widget/content "New Section" 
+                   :widget/owner owner
+                   :widget/order order}])))
 
 (defn ->par [db eid events]
   (go (>! events [{:db/id eid :widget/type :par

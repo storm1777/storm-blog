@@ -36,8 +36,18 @@
 (defn gv [db atts eid]
   (map (fn [att] (g db att eid)) atts))
 
-(defn children [db eid]
-  (map conj (eav db :widget/owner eid) (repeat db)))
+(defn children 
+  ([db eid]
+   (map conj (eav db :widget/owner eid) (repeat db)))
+  ([db vals eid]))
+
+(defn ordered-children [db eid]
+  (apply map vector
+         [(->> (d/pull db [{:widget/_owner [:db/id :widget/order]}] eid)
+                :widget/_owner
+                (sort-by :widget/order)
+                (map :db/id))
+          (repeat db)]))
 
 (defn get-widgets [db type]
   (map conj (d/q '[:find ?e
@@ -46,18 +56,19 @@
                  db type)
        (repeat db))) 
 
+(defn get-ui-att [db att]
+  (g db att 0))
+
 (defn section-template [eid content]
   {:db/id eid
    :widget/owner 1
    :widget/type :section
-   :widget/order 15
    :widget/content content})
 
 (defn par-template [eid content]
   {:db/id eid
    :widget/owner 1
    :widget/type :par
-   :widget/order 15
    :widget/content content})
 
 (defn get-att [db att]

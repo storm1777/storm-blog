@@ -153,7 +153,7 @@
     :widget/type :img
     :widget/owner -1
     :widget/order 16
-    :widget/content "image source"}
+    :img/src "/img/img0.jpg"}
    {:db/id 0
     :ui/article -1}
    {:db/id -28
@@ -178,17 +178,17 @@
    {:db/id -32
     :widget/type :img
     :widget/owner -1
-    :img/src "/img/parliament0.jpg"
+    :img/src "/img/img0.jpg"
     :img/caption "Parliament Caption"}
    {:db/id -33
     :widget/type :img
     :widget/owner -1
-    :img/src "/img/banner-background.jpg"
+    :img/src "/img/img1.jpg"
     :img/caption "banner caption"}
    {:db/id -34
     :widget/type :img
     :widget/owner -1
-    :img/src "/img/parliament1.jpg"
+    :img/src "/img/img2.jpg"
     :img/caption "Parliament 1 picture"}
    {:db/id -35
     :widget/type :facet
@@ -207,6 +207,7 @@
     :facet/title "Archive"}
    {:db/id -38
     :widget/type :carousel
+    :widget/order 30
     :widget/owner -1}
    {:db/id -39
     :carousel-item/active true

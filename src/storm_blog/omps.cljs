@@ -18,6 +18,14 @@
 
 (def make (partial om/build-all widgets))
 
+(defmethod widgets :img [[eid db] owner]
+  (reify
+    om/IRender
+    (render [this]
+      (let [[src] (db/gv db [:img/src] eid)]
+        (html
+         [:img {:src src}])))))
+
 (defmethod widgets :carousel-item [[eid db] owner]
   (reify
     om/IRender
@@ -75,12 +83,12 @@
     om/IRenderState
     (render-state [this state]
       (let [events (:events (om/get-shared owner))
-            content (db/g db :widget/content eid)]
+            [content order] (db/gv db [:widget/content :widget/order] eid)]
         (html
          (if (not (:show-dropdown state))
            [:h3 (a/not-active owner) content]
            [:.input-group (a/active owner)
-            (addon-button #(a/add-section db eid events) "+")
+            (addon-button #(a/add-section db eid events 1 (+ 0.1 order)) "+")
             (addon-button #(a/retract db eid events) "-")
             [:input.form-control {:type "textarea" :rows 3
                                   :value content
@@ -98,13 +106,13 @@
     om/IRenderState
     (render-state [this state]
       (let [events (:events (om/get-shared owner))
-            content (db/g db :widget/content eid)]
+            [content order] (db/gv db [:widget/content :widget/order] eid)]
         (html
          (if (not (:show-dropdown state))
            [:p (a/not-active owner)
             (db/g db :widget/content eid)]
            [:.input-group (a/active owner)
-            (addon-button #(a/add-par db eid events) "+")
+            (addon-button #(a/add-par db eid events 1 (+ 0.1 order)) "+")
             (addon-button #(a/retract db eid events) "-")
             [:textarea.form-control {:rows 4
                                      :value (db/g db :widget/content eid)
@@ -170,14 +178,14 @@
                        :in $ ?a
                        :where [?e ?a ?v]]
                      db att))]])))))
- 
+  
 (defmethod widgets :page [[eid db] owner]
   (reify
     om/IRender
     (render [this]
       (let [events (:events (om/get-shared owner))
             facets (db/get-widgets db :facet)
-            articles (db/get-widgets db :article)
+            articles [[(:db/id (db/get-ui-att db :ui/article)) db]]
             about-us [[10 db]]]
         (html
          [:page
@@ -192,7 +200,7 @@
     om/IRender
     (render [this]
       (let [events (:events (om/get-shared owner))
-            content (sort-by first (db/children db eid))
+            content (db/ordered-children db eid)
             comments (db/get-widgets db :comment)
             comment-form (db/get-widgets db :comment-form)]
         (html
@@ -209,16 +217,16 @@
   (reify
     om/IRender
     (render [this]
-      (html
-       [:p (db/g db :widget/type eid)]))))
+      (let [content (db/g db :widget/type eid)]
+        (html
+         [:p content])))))
 
 (defn widget [conn owner]
   (reify
     om/IRender
     (render [_]
       (let [db @conn
-            header [8 db]
-            article [(db/get-att db :ui/article) db]
-            page [42 db]]
+            header (first (db/get-widgets db :header))
+            page   (first (db/get-widgets db :page))]
         (html
-         [:div (make [header #_ article page])])))))
+         [:div (make [header page])])))))
