@@ -56,20 +56,18 @@
                  db type)
        (repeat db))) 
 
+(defn get-widget [db type]
+  (first (get-widgets db type)))
+
 (defn get-ui-att [db att]
   (g db att 0))
 
-(defn section-template [eid content]
+(defn set-att [eid att val]
   {:db/id eid
-   :widget/owner 1
-   :widget/type :section
-   :widget/content content})
+   att val})
 
-(defn par-template [eid content]
-  {:db/id eid
-   :widget/owner 1
-   :widget/type :par
-   :widget/content content})
+(defn set-content [eid content]
+  (set-att eid :widget/content content))
 
 (defn get-att [db att]
   (d/q '[:find ?v .

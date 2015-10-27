@@ -54,9 +54,9 @@
           [:.carousel-inner {:role "listbox"} (make carousel-slides)]
           [:.left.carousel-control {:href "#car" :role "button"
                                     :data-slide "prev"}
-           [:span.glyphicon.glyphicon-chevron-right {:aria-hidden "true"}]
+           [:span.glyphicon.glyphicon-chevron-left {:aria-hidden "true"}]
            [:span.sr-only "Previous"]]
-          [:right.carousel-control {:href "#car" :role "button"
+          [:.right.carousel-control {:href "#car" :role "button"
                                     :data-slide "next"}
            [:span.glyphicon.glyphicon-chevron-right {:aria-hidden "true"}]
            [:span.sr-only "Next"]]])))))
@@ -74,7 +74,7 @@
 (defn addon-button [f val]
   [:.input-group-addon.btn.btn-default {:on-click f} val])
 
-(defmethod widgets :section [[eid db] owner]
+(defmethod widgets :text [[eid db] owner]
   (reify
     om/IInitState
     (init-state [_]
@@ -83,47 +83,19 @@
     om/IRenderState
     (render-state [this state]
       (let [events (:events (om/get-shared owner))
-            [content order] (db/gv db [:widget/content :widget/order] eid)]
+            [content order tag] (db/gv db [:widget/content :widget/order :widget/tag] eid)]
         (html
          (if (not (:show-dropdown state))
-           [:h3 (a/not-active owner) content]
+           [tag (a/not-active owner) content]
            [:.input-group (a/active owner)
-            (addon-button #(a/add-section db eid events 1 (+ 0.1 order)) "+")
+            (addon-button #(a/add-text eid events 1 (+ 0.1 order) :h3) "+")
             (addon-button #(a/retract db eid events) "-")
             [:input.form-control {:type "textarea" :rows 3
                                   :value content
                                   :onChange #(let [new-value (-> % .-target .-value)]
-                                               (a/transact! events (db/section-template eid new-value)))}]
+                                               (a/transact! events (db/set-content eid new-value)))}]
             (when (:show-dropdown state)
               (addon-button #(a/retract db eid events) "-"))]))))))
-
-(defmethod widgets :par [[eid db] owner]
-  (reify
-    om/IInitState
-    (init-state [_]
-      {:edit false
-       :show-dropdown false})
-    om/IRenderState
-    (render-state [this state]
-      (let [events (:events (om/get-shared owner))
-            [content order] (db/gv db [:widget/content :widget/order] eid)]
-        (html
-         (if (not (:show-dropdown state))
-           [:p (a/not-active owner)
-            (db/g db :widget/content eid)]
-           [:.input-group (a/active owner)
-            (addon-button #(a/add-par db eid events 1 (+ 0.1 order)) "+")
-            (addon-button #(a/retract db eid events) "-")
-            [:textarea.form-control {:rows 4
-                                     :value (db/g db :widget/content eid)
-                                     :onChange #(let [new-value (-> % .-target .-value)]
-                                                  (a/transact! events (db/par-template eid new-value)))}]
-            (when (:show-dropdown state)
-              [:p (addon-button #(a/retract db eid events) "-")
-               [:.input-group-addon.btn.btn-default
-                (dropdown-btn "Par"
-                              ["par" {:onClick #(a/->par db eid events)}]
-                              ["Section" {:onClick #(a/->section db eid events)}])]])]))))))
 
 (defmethod widgets :header [[eid db] owner]
   (reify
@@ -226,7 +198,7 @@
     om/IRender
     (render [_]
       (let [db @conn
-            header (first (db/get-widgets db :header))
-            page   (first (db/get-widgets db :page))]
+            header (db/get-widget db :header)
+            page   (db/get-widget db :page)]
         (html
          [:div (make [header page])])))))

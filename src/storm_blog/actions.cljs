@@ -9,25 +9,18 @@
 (defn transact! [events & data]
   (go (>! events data)))
 
-(defn add-par [_ eid events owner order]
-  (go (>! events [{:db/id -1 :widget/type :par
-                   :widget/content "New Paragraph" 
+(defn add-text [eid events owner order tag]
+  (go (>! events [{:db/id -1 :widget/type :text
+                   :widget/content "New"
                    :widget/owner owner
-                   :widget/order order}])))
-
-(defn add-section [_ eid events owner order]
-  (go (>! events [{:db/id -1 :widget/type :section
-                   :widget/content "New Section" 
-                   :widget/owner owner
-                   :widget/order order}])))
+                   :widget/order order
+                   :widget/tag tag}])))
 
 (defn ->par [db eid events]
-  (go (>! events [{:db/id eid :widget/type :par
-                   :widget/content (db/g db :widget/content eid)}])))
+  (go (>! events [{:db/id eid :widget/tag :p}])))
 
 (defn ->section [db eid events]
-  (go (>! events [{:db/id eid :widget/type :section
-                   :widget/content (db/g db :widget/content eid)}])))
+  (go (>! events [{:db/id eid :widget/tag :h3}])))
 
 (defn retract [_ eid events]
   (go (>! events [[:db.fn/retractEntity eid]])))

@@ -1,5 +1,11 @@
 (ns storm-blog.edit-comps)
 
+
+
+
+
+
+
 #_ (defmulti edit
   (fn [[eid db] _]
     (db/g db :widget/type eid)))
@@ -74,3 +80,31 @@
     om/IRender
     (render [this]
       (html [:div  "Edit component"]))))
+
+#_ (defmethod widgets :par [[eid db] owner]
+  (reify
+    om/IInitState
+    (init-state [_]
+      {:edit false
+       :show-dropdown false})
+    om/IRenderState
+    (render-state [this state]
+      (let [events (:events (om/get-shared owner))
+            [content order tag] (db/gv db [:widget/content :widget/order :widget/tag] eid)]
+        (html
+         (if (not (:show-dropdown state))
+           [tag (a/not-active owner)
+            (db/g db :widget/content eid)]
+           [:.input-group (a/active owner)
+            (addon-button #(a/add-par db eid events 1 (+ 0.1 order)) "+")
+            (addon-button #(a/retract db eid events) "-")
+            [:textarea.form-control {:rows 4
+                                     :value (db/g db :widget/content eid)
+                                     :onChange #(let [new-value (-> % .-target .-value)]
+                                                  (a/transact! events (db/set-content eid new-value)))}]
+            (when (:show-dropdown state)
+              [:p (addon-button #(a/retract db eid events) "-")
+               [:.input-group-addon.btn.btn-default
+                (dropdown-btn "Par"
+                              ["par" {:onClick #(a/->par db eid events)}]
+                              ["Section" {:onClick #(a/->section db eid events)}])]])]))))))
