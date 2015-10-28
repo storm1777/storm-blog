@@ -1,8 +1,9 @@
 (ns ^:figwheel-always storm-blog.core
-  (:require [om.core :as om :include-macros true]
+  (:require [om.next :as om :refer-macros [defui]]
             [storm-blog.actions :as a]
             [storm-blog.util :as u]
             [storm-blog.omps :as c]
+            [storm-blog.comps :as co]
             [storm-blog.db :as db]
             [storm-blog.md5 :as md5]
             [sablono.core :as html :refer-macros [html]]
@@ -42,19 +43,29 @@
 (def conn (db/create-db))
 (def testa (db/populate-db! conn))
 
-(defn main []
-  (go
-    (while true
-      (d/transact! conn (<! events))))
-  (let [history (History.)]
-    (events/listen history "navigate"
-                   (fn [event]
-                     (secretary/dispatch! (.-token event))))
-    (.setEnabled history true))
-  (om/root c/widget conn
-           {:shared {:events events}
-            :target (. js/document (getElementById "app"))}))
+#_(defn main []
+    (go
+      (while true
+        (d/transact! conn (<! events))))
+    (let [history (History.)]
+      (events/listen history "navigate"
+                     (fn [event]
+                       (secretary/dispatch! (.-token event))))
+      (.setEnabled history true))
+    (om/root c/widget conn
+             {:shared {:events events}
+              :target (. js/document (getElementById "app"))}))
 
-(main)
+(def reconciler 
+  (om/reconciler
+   {:state conn
+    :parser (om/parser {:read co/read :mutate co/mutate})}))
+
+(def counter (om/factory co/Counter))
+
+(om/add-root! reconciler
+              co/Counter (gdom/getElement "app"))
+
+#_(main)
 
 

@@ -248,4 +248,7 @@
     :widget/type :carousel-item
     :widget/owner -38}
    {:db/id -42
-    :widget/type :page}])
+    :widget/type :page}
+   {:db/id -43
+    :app/title "Hello, Datascript!"
+    :app/count 0}])
