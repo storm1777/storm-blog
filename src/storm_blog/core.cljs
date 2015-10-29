@@ -1,5 +1,6 @@
 (ns ^:figwheel-always storm-blog.core
   (:require [om.next :as om :refer-macros [defui]]
+            [om.dom :as dom]
             [storm-blog.actions :as a]
             [storm-blog.util :as u]
             [storm-blog.omps :as c]
@@ -63,8 +64,17 @@
 
 (def counter (om/factory co/Counter))
 
-(om/add-root! reconciler
-              co/Counter (gdom/getElement "app"))
+#_(om/add-root! reconciler
+              co/HelloWorld (gdom/getElement "app"))
+
+(defui HelloWorld
+  Object
+  (render [this]
+          (dom/div "Hello World")))
+
+(def hello (om/factory HelloWorld))
+
+(js/ReactDOM.render (hello) (gdom/getElement "app"))
 
 #_(main)
 

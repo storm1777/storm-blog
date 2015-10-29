@@ -38,6 +38,12 @@
 
 (defmulti mutate om/dispatch)
 
+
+(defui HelloWorld
+  Object 
+  (render [this]
+          (dom/div nil "Hello World")))
+
 ;[env key params]
 ; returns a hashmap that has both :value and :action keys
 (defmethod mutate 'app/increment
